@@ -137,3 +137,5 @@ export type Prediction = z.infer<typeof predictionSchema>;
 export type CommitPredictionInput = z.infer<typeof commitPredictionSchema>;
 export type ProfileDto = z.infer<typeof profileSchema>;
 export type LeaderboardDto = z.infer<typeof leaderboardSchema>;
+export type WalletAccount = z.infer<typeof walletAccountSchema>;
+export type WalletOverview = z.infer<typeof walletOverviewSchema>;

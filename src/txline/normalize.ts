@@ -1,5 +1,9 @@
 import type { NormalizedOddsEvent, NormalizedScoreEvent } from './types.js';
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
 function isPair(value: unknown): value is [number, number] {
   return (
     Array.isArray(value) &&
@@ -28,14 +32,17 @@ interface RawScorePayload {
 // `scoreSoccer` cumulative block ({ Goals, YellowCards, RedCards, Corners }), each a
 // [teamHome, teamAway] pair. Fix here — this is the only place that reads raw score field names.
 function isRawScorePayload(raw: unknown): raw is RawScorePayload {
-  if (typeof raw !== 'object' || raw === null) return false;
-  const r = raw as Record<string, unknown>;
-  if (typeof r.fixtureId !== 'string' && typeof r.fixtureId !== 'number') return false;
-  if (typeof r.seq !== 'number' || typeof r.ts !== 'number' || typeof r.gameState !== 'string') {
+  if (!isRecord(raw)) return false;
+  if (typeof raw.fixtureId !== 'string' && typeof raw.fixtureId !== 'number') return false;
+  if (
+    typeof raw.seq !== 'number' ||
+    typeof raw.ts !== 'number' ||
+    typeof raw.gameState !== 'string'
+  ) {
     return false;
   }
-  if (typeof r.scoreSoccer !== 'object' || r.scoreSoccer === null) return false;
-  const s = r.scoreSoccer as Record<string, unknown>;
+  if (!isRecord(raw.scoreSoccer)) return false;
+  const s = raw.scoreSoccer;
   return isPair(s.Goals) && isPair(s.YellowCards) && isPair(s.RedCards) && isPair(s.Corners);
 }
 
@@ -84,13 +91,12 @@ function isNumberArray(value: unknown): value is number[] {
 // Assumes camelCase envelope (fixtureId/seq/ts) + PascalCase odds fields (Pct/PriceNames/Prices/
 // InRunning/GameState) per the spec doc, with Pct ordered [home, draw, away]. Fix here only.
 function isRawOddsPayload(raw: unknown): raw is RawOddsPayload {
-  if (typeof raw !== 'object' || raw === null) return false;
-  const r = raw as Record<string, unknown>;
-  if (typeof r.fixtureId !== 'string' && typeof r.fixtureId !== 'number') return false;
-  if (typeof r.seq !== 'number' || typeof r.ts !== 'number') return false;
-  if (!isNumberArray(r.Pct) || r.Pct.length < 3) return false;
-  if (!isStringArray(r.PriceNames) || !isNumberArray(r.Prices)) return false;
-  if (typeof r.InRunning !== 'boolean' || typeof r.GameState !== 'string') return false;
+  if (!isRecord(raw)) return false;
+  if (typeof raw.fixtureId !== 'string' && typeof raw.fixtureId !== 'number') return false;
+  if (typeof raw.seq !== 'number' || typeof raw.ts !== 'number') return false;
+  if (!isNumberArray(raw.Pct) || raw.Pct.length < 3) return false;
+  if (!isStringArray(raw.PriceNames) || !isNumberArray(raw.Prices)) return false;
+  if (typeof raw.InRunning !== 'boolean' || typeof raw.GameState !== 'string') return false;
   return true;
 }
 

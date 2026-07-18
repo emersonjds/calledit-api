@@ -10,7 +10,7 @@ describe('swagger', () => {
     await app.ready();
     const res = await app.inject({ method: 'GET', url: '/docs/json' });
     expect(res.statusCode).toBe(200);
-    const doc = res.json() as { openapi?: string; info?: { title?: string } };
+    const doc: { openapi?: string; info?: { title?: string } } = res.json();
     expect(doc.openapi).toMatch(/^3\./);
     expect(doc.info?.title).toBe('Called It API');
     await app.close();
