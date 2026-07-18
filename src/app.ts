@@ -10,6 +10,7 @@ import {
 } from 'fastify-type-provider-zod';
 import type { Db } from './db/types.js';
 import { healthRoutes } from './routes/health.js';
+import { predictionRoutes } from './routes/predictions.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -43,5 +44,6 @@ export function buildApp(opts: AppOptions): FastifyInstance {
   });
 
   app.register(healthRoutes);
+  app.register(predictionRoutes);
   return app;
 }
