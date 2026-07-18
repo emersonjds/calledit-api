@@ -11,6 +11,7 @@ import {
 import type { Db } from './db/types.js';
 import { healthRoutes } from './routes/health.js';
 import { predictionRoutes } from './routes/predictions.js';
+import { stubRoutes } from './routes/stubs.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -45,5 +46,6 @@ export function buildApp(opts: AppOptions): FastifyInstance {
 
   app.register(healthRoutes);
   app.register(predictionRoutes);
+  app.register(stubRoutes);
   return app;
 }
