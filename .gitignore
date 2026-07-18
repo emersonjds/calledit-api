@@ -1,0 +1,29 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build
+dist/
+*.tsbuildinfo
+
+# env & secrets — never commit
+.env
+.env.*
+!.env.example
+
+# logs / feed dumps
+*.log
+data/
+
+# test / coverage
+coverage/
+
+# os / editor
+.DS_Store
+.vscode/
+.idea/
+
+# AI tooling — never commit local/session state
+.claude/settings.local.json
+.serena/
+.superpowers/
