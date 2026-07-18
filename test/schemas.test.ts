@@ -21,8 +21,16 @@ describe('schemas', () => {
 
   it('rejects seq below 1', () => {
     const bad = {
-      id: 'p1', matchId: 'm1', market: 'goal', provable: true, stakeSol: 0.5,
-      multiplier: 2, potentialSol: 1, atClockMin: 12, windowMin: 5, status: 'resolving',
+      id: 'p1',
+      matchId: 'm1',
+      market: 'goal',
+      provable: true,
+      stakeSol: 0.5,
+      multiplier: 2,
+      potentialSol: 1,
+      atClockMin: 12,
+      windowMin: 5,
+      status: 'resolving',
       stamp: { txHash: 'x', stampedAt: 1, seq: 0, epochDay: 20000 },
     };
     expect(() => predictionSchema.parse(bad)).toThrow();

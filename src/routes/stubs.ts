@@ -2,50 +2,46 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import {
-  fixturesSchema,
   leaderboardSchema,
-  matchSnapshotSchema,
   profileSchema,
   walletAccountSchema,
   walletOverviewSchema,
 } from '../schemas/index.js';
-
-const BRA = { code: 'BRA', name: 'Brazil', flag: '🇧🇷' };
-const ARG = { code: 'ARG', name: 'Argentina', flag: '🇦🇷' };
+import type { WalletAccount, WalletOverview } from '../schemas/index.js';
 
 export async function stubRoutes(app: FastifyInstance): Promise<void> {
   const r = app.withTypeProvider<ZodTypeProvider>();
 
   r.post(
     '/api/wallet/connect',
-    { schema: { body: z.object({ provider: z.string() }), response: { 200: walletAccountSchema } } },
-    async (req) => ({ address: 'STUBwa11et', balanceSol: 12.5, chain: 'solana' as const, provider: req.body.provider }),
-  );
-
-  r.get(
-    '/api/feed/:matchId',
-    { schema: { params: z.object({ matchId: z.string() }), response: { 200: matchSnapshotSchema } } },
-    async (req) => ({
-      matchId: req.params.matchId,
-      clockMin: 12,
-      period: '1H' as const,
-      home: BRA,
-      away: ARG,
-      score: [1, 0] as [number, number],
-      pct: { home: 0.55, draw: 0.25, away: 0.2 },
-      events: [],
-      markets: [
-        { market: 'goal', multiplier: 2.0 },
-        { market: 'corner', multiplier: 1.6 },
-        { market: 'card', multiplier: 1.8 },
-      ],
-      live: true,
+    {
+      schema: {
+        tags: ['wallet'],
+        summary: 'Connect a wallet',
+        description: 'Registers a wallet provider (e.g. Phantom) for the session. Stubbed pending real signing.',
+        body: z.object({ provider: z.string() }),
+        response: { 200: walletAccountSchema },
+      },
+    },
+    async (req): Promise<WalletAccount> => ({
+      address: 'stub-wallet-address',
+      balanceSol: 12.5,
+      chain: 'solana',
+      provider: req.body.provider,
     }),
   );
 
   r.get(
     '/api/me',
-    { schema: { querystring: z.object({ address: z.string() }), response: { 200: profileSchema } } },
+    {
+      schema: {
+        tags: ['profile'],
+        summary: 'Get caller profile',
+        description: 'Returns accuracy, streak, and balance stats for a wallet address. Stubbed.',
+        querystring: z.object({ address: z.string() }),
+        response: { 200: profileSchema },
+      },
+    },
     async (req) => ({
       address: req.query.address,
       handle: 'stubcaller',
@@ -61,7 +57,15 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
 
   r.get(
     '/api/leaderboard',
-    { schema: { querystring: z.object({ address: z.string() }), response: { 200: leaderboardSchema } } },
+    {
+      schema: {
+        tags: ['leaderboard'],
+        summary: 'Get the leaderboard',
+        description: 'Returns callers ranked by accuracy and streak, with the requesting address highlighted. Stubbed.',
+        querystring: z.object({ address: z.string() }),
+        response: { 200: leaderboardSchema },
+      },
+    },
     async () => ({
       entries: [
         { rank: 1, handle: 'goalgod', accuracy: 0.81, streak: 6, calls: 40, you: false },
@@ -70,41 +74,61 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
     }),
   );
 
-  r.get(
-    '/api/fixtures/upcoming',
-    { schema: { response: { 200: fixturesSchema } } },
-    async () => ({
-      items: [
-        { id: 'm1', home: BRA, away: ARG, kickoff: 1_752_000_000_000, stage: 'Group A', venue: 'MetLife' },
-      ],
-    }),
-  );
-
-  const overview = (address: string) => ({
+  const overview = (address: string): WalletOverview => ({
     address,
     balanceSol: 12.5,
     currency: 'SOL',
     fiatRate: 180,
     activity: [
-      { id: 'a1', type: 'deposit' as const, amountSol: 5, status: 'settled' as const, ts: 1_751_000_000_000 },
+      {
+        id: 'a1',
+        type: 'deposit',
+        amountSol: 5,
+        status: 'settled',
+        ts: 1_751_000_000_000,
+      },
     ],
   });
 
   r.get(
     '/api/wallet',
-    { schema: { querystring: z.object({ address: z.string() }), response: { 200: walletOverviewSchema } } },
+    {
+      schema: {
+        tags: ['wallet'],
+        summary: 'Get wallet overview',
+        description: 'Returns SOL balance, fiat rate, and recent activity for a wallet address. Stubbed.',
+        querystring: z.object({ address: z.string() }),
+        response: { 200: walletOverviewSchema },
+      },
+    },
     async (req) => overview(req.query.address),
   );
 
   r.post(
     '/api/wallet/deposit',
-    { schema: { body: z.object({ address: z.string(), amountSol: z.number() }), response: { 200: walletOverviewSchema } } },
+    {
+      schema: {
+        tags: ['wallet'],
+        summary: 'Deposit SOL',
+        description: 'Credits a wallet with SOL and returns the updated overview. Stubbed.',
+        body: z.object({ address: z.string(), amountSol: z.number() }),
+        response: { 200: walletOverviewSchema },
+      },
+    },
     async (req) => overview(req.body.address),
   );
 
   r.post(
     '/api/wallet/withdraw',
-    { schema: { body: z.object({ address: z.string(), amountSol: z.number(), method: z.string() }), response: { 200: walletOverviewSchema } } },
+    {
+      schema: {
+        tags: ['wallet'],
+        summary: 'Withdraw SOL',
+        description: 'Debits a wallet with SOL via the given method and returns the updated overview. Stubbed.',
+        body: z.object({ address: z.string(), amountSol: z.number(), method: z.string() }),
+        response: { 200: walletOverviewSchema },
+      },
+    },
     async (req) => overview(req.body.address),
   );
 }

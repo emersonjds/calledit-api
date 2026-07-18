@@ -1,0 +1,25 @@
+{
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": ["serena", "context-mode", "context7"],
+  "permissions": {
+    "allow": [
+      "Bash(pnpm test*)",
+      "Bash(pnpm lint*)",
+      "Bash(pnpm type-check*)",
+      "Bash(pnpm build*)",
+      "Bash(pnpm format*)"
+    ],
+    "deny": [
+      "Bash(git push*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git commit --amend*)",
+      "Bash(git reset --hard*)",
+      "Bash(git config --global*)",
+      "Bash(git config user.*)"
+    ]
+  }
+}

@@ -38,7 +38,7 @@ export const walletAccountSchema = z.object({
 export const stampSchema = z.object({
   txHash: z.string(),
   stampedAt: z.number(),
-  seq: z.number().int().min(1),
+  seq: z.number().int().min(1).describe('Monotonic TxLINE event sequence number the call was stamped against.'),
   epochDay: z.number().int(),
 });
 
@@ -52,8 +52,10 @@ export const settlementSchema = z.object({
 export const predictionSchema = z.object({
   id: z.string(),
   matchId: z.string(),
-  market: z.enum(['corner', 'card', 'goal', 'foul']),
-  provable: z.boolean(),
+  market: z.enum(['corner', 'card', 'goal', 'foul']).describe('Stat the call is staked on.'),
+  provable: z
+    .boolean()
+    .describe('Whether the market settles on-chain via TxLINE proof; foul is not provable.'),
   stakeSol: z.number(),
   multiplier: z.number(),
   potentialSol: z.number(),
@@ -129,8 +131,14 @@ export const commitPredictionSchema = z.object({
   address: z.string(),
 });
 
+export type TeamInfo = z.infer<typeof teamInfoSchema>;
+export type MatchEvent = z.infer<typeof matchEventSchema>;
+export type MatchSnapshot = z.infer<typeof matchSnapshotSchema>;
 export type Market = z.infer<typeof marketSchema>;
 export type Prediction = z.infer<typeof predictionSchema>;
 export type CommitPredictionInput = z.infer<typeof commitPredictionSchema>;
 export type ProfileDto = z.infer<typeof profileSchema>;
 export type LeaderboardDto = z.infer<typeof leaderboardSchema>;
+export type WalletAccount = z.infer<typeof walletAccountSchema>;
+export type WalletOverview = z.infer<typeof walletOverviewSchema>;
+export type Fixture = z.infer<typeof fixtureSchema>;

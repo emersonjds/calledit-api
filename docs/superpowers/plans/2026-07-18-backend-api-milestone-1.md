@@ -22,11 +22,13 @@
 ### Task 1: Project bootstrap, health route, agents migration
 
 **Files:**
+
 - Create: `package.json`, `tsconfig.json`, `.env.example`, `src/config/env.ts`, `src/db/types.ts`, `src/app.ts`, `src/server.ts`, `src/routes/health.ts`
 - Create: `.claude/agents/*` (copied from `../called-it/.claude/agents/`), `.mcp.json` (copied)
 - Test: `test/health.test.ts`
 
 **Interfaces:**
+
 - Produces: `interface Db { query<T = unknown>(text: string, params?: unknown[]): Promise<{ rows: T[] }> }` (in `src/db/types.ts`)
 - Produces: `buildApp(opts: { db: Db }): FastifyInstance` (in `src/app.ts`), decorates `app.db`
 - Produces: `loadEnv(): { NODE_ENV: string; PORT: number; DATABASE_URL: string; ... }` (in `src/config/env.ts`)
@@ -219,6 +221,7 @@ SERVICE_WALLET_SECRET=
 - [ ] **Step 10: Copy backend agents and MCP config**
 
 Run:
+
 ```bash
 cd /Users/emerson/Documents/workspace/hackathons/calledit-api
 mkdir -p .claude/agents
@@ -226,6 +229,7 @@ for a in arq back bug qa redteam scribe; do cp ../called-it/.claude/agents/$a.md
 cp ../called-it/.mcp.json .mcp.json
 ls .claude/agents/
 ```
+
 Expected: `arq.md back.md bug.md qa.md redteam.md scribe.md`
 
 (Agent text adaptation happens in Task 8 — copy verbatim now.)
@@ -267,10 +271,12 @@ git commit -m "bootstrap fastify service with health route"
 ### Task 2: Swagger UI with the Fastify logo removed
 
 **Files:**
+
 - Modify: `src/app.ts`
 - Test: `test/docs.test.ts`
 
 **Interfaces:**
+
 - Consumes: `buildApp({ db })` from Task 1
 - Produces: `/docs` (Swagger UI, topbar hidden) and `/docs/json` (OpenAPI document)
 
@@ -375,10 +381,12 @@ git commit -m "add swagger ui with topbar logo removed"
 ### Task 3: Zod DTO schemas mirroring the frontend contracts
 
 **Files:**
+
 - Create: `src/schemas/index.ts`
 - Test: `test/schemas.test.ts`
 
 **Interfaces:**
+
 - Produces: `walletAccountSchema`, `matchSnapshotSchema`, `predictionSchema`, `profileSchema`, `leaderboardSchema`, `historySchema`, `fixturesSchema`, `walletOverviewSchema`, `commitPredictionSchema`, and inferred types `Prediction`, `CommitPredictionInput`.
 
 - [ ] **Step 1: Create `src/schemas/index.ts` (verbatim mirror of the frontend + request bodies)**
@@ -548,8 +556,16 @@ describe('schemas', () => {
 
   it('rejects seq below 1', () => {
     const bad = {
-      id: 'p1', matchId: 'm1', market: 'goal', provable: true, stakeSol: 0.5,
-      multiplier: 2, potentialSol: 1, atClockMin: 12, windowMin: 5, status: 'resolving',
+      id: 'p1',
+      matchId: 'm1',
+      market: 'goal',
+      provable: true,
+      stakeSol: 0.5,
+      multiplier: 2,
+      potentialSol: 1,
+      atClockMin: 12,
+      windowMin: 5,
+      status: 'resolving',
       stamp: { txHash: 'x', stampedAt: 1, seq: 0, epochDay: 20000 },
     };
     expect(() => predictionSchema.parse(bad)).toThrow();
@@ -580,10 +596,12 @@ git commit -m "mirror frontend zod contracts"
 ### Task 4: Market money helpers (provability, multiplier, payout)
 
 **Files:**
+
 - Create: `src/services/markets.ts`
 - Test: `test/markets.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Market` type from `src/schemas/index.js`
 - Produces: `isProvable(market: Market): boolean`, `multiplierFor(market: Market): number`, `payout(stakeSol: number, multiplier: number): number`
 
@@ -657,10 +675,12 @@ git commit -m "add market provability and payout helpers"
 ### Task 5: Database layer (schema, pool, migrate)
 
 **Files:**
+
 - Create: `src/db/schema.sql`, `src/db/migrate.ts`
 - Test: `test/schema.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Db` from `src/db/types.js`, `loadEnv` from `src/config/env.js`
 - Produces: `runMigration(db: Db): Promise<void>` (in `src/db/migrate.ts`)
 
@@ -775,11 +795,13 @@ git commit -m "add postgres schema and migration runner"
 ### Task 6: Predictions routes (DB-backed)
 
 **Files:**
+
 - Create: `src/services/predictions.ts`, `src/routes/predictions.ts`
 - Modify: `src/app.ts` (register `predictionRoutes`)
 - Test: `test/predictions.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Db`, schemas, `isProvable`/`multiplierFor`/`payout`
 - Produces: `createPrediction(db, input)`, `getPredictionById(db, id)`, `listByAddress(db, address)` (in `src/services/predictions.ts`), each returning `Prediction`/`Prediction | null`/`Prediction[]`
 - Produces routes: `POST /api/predictions`, `GET /api/predictions/:id`, `GET /api/predictions?address=`
@@ -851,8 +873,20 @@ export async function createPrediction(db: Db, input: CommitPredictionInput): Pr
         at_clock_min, window_min, status, tx_hash, stamped_at, seq, epoch_day)
      values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'resolving',$11,$12,$13,$14)`,
     [
-      id, input.address, input.matchId, input.market, provable, input.stakeSol, multiplier,
-      potentialSol, atClockMin, windowMin, txHash, stampedAt, seq, epochDay,
+      id,
+      input.address,
+      input.matchId,
+      input.market,
+      provable,
+      input.stakeSol,
+      multiplier,
+      potentialSol,
+      atClockMin,
+      windowMin,
+      txHash,
+      stampedAt,
+      seq,
+      epochDay,
     ],
   );
 
@@ -905,7 +939,9 @@ export async function predictionRoutes(app: FastifyInstance): Promise<void> {
 
   r.get(
     '/api/predictions',
-    { schema: { querystring: z.object({ address: z.string() }), response: { 200: historySchema } } },
+    {
+      schema: { querystring: z.object({ address: z.string() }), response: { 200: historySchema } },
+    },
     async (req) => ({ items: await listByAddress(app.db, req.query.address) }),
   );
 
@@ -928,7 +964,7 @@ Add the import and registration (after `app.register(healthRoutes);`):
 ```ts
 import { predictionRoutes } from './routes/predictions.js';
 // ...
-  app.register(predictionRoutes);
+app.register(predictionRoutes);
 ```
 
 - [ ] **Step 4: Write the test `test/predictions.test.ts`**
@@ -965,9 +1001,22 @@ function makeApp() {
 
 function fullRow(id: string, address: string) {
   return {
-    id, address, match_id: 'm1', market: 'goal', provable: true, stake_sol: '0.5',
-    multiplier: '2', potential_sol: '1', at_clock_min: 0, window_min: 5, status: 'resolving',
-    tx_hash: `stub-${id}`, stamped_at: '1', seq: 1, epoch_day: 20000, settlement: null,
+    id,
+    address,
+    match_id: 'm1',
+    market: 'goal',
+    provable: true,
+    stake_sol: '0.5',
+    multiplier: '2',
+    potential_sol: '1',
+    at_clock_min: 0,
+    window_min: 5,
+    status: 'resolving',
+    tx_hash: `stub-${id}`,
+    stamped_at: '1',
+    seq: 1,
+    epoch_day: 20000,
+    settlement: null,
   };
 }
 
@@ -975,7 +1024,8 @@ describe('predictions routes', () => {
   it('POST creates a schema-valid prediction', async () => {
     const app = makeApp();
     const res = await app.inject({
-      method: 'POST', url: '/api/predictions',
+      method: 'POST',
+      url: '/api/predictions',
       payload: { matchId: 'm1', market: 'goal', stakeSol: 0.5, address: 'alice' },
     });
     expect(res.statusCode).toBe(200);
@@ -994,7 +1044,8 @@ describe('predictions routes', () => {
   it('GET list returns items for the address', async () => {
     const app = makeApp();
     await app.inject({
-      method: 'POST', url: '/api/predictions',
+      method: 'POST',
+      url: '/api/predictions',
       payload: { matchId: 'm1', market: 'goal', stakeSol: 0.5, address: 'alice' },
     });
     const res = await app.inject({ method: 'GET', url: '/api/predictions?address=alice' });
@@ -1022,11 +1073,13 @@ git commit -m "add db-backed predictions routes"
 ### Task 7: Stub routes (wallet, feed, profile, leaderboard, fixtures)
 
 **Files:**
+
 - Create: `src/routes/stubs.ts`
 - Modify: `src/app.ts` (register `stubRoutes`)
 - Test: `test/stubs.test.ts`
 
 **Interfaces:**
+
 - Consumes: schemas from Task 3
 - Produces routes: `POST /api/wallet/connect`, `GET /api/feed/:matchId`, `GET /api/me`, `GET /api/leaderboard`, `GET /api/fixtures/upcoming`, `GET /api/wallet`, `POST /api/wallet/deposit`, `POST /api/wallet/withdraw` — all returning valid-shaped stubs.
 
@@ -1053,13 +1106,22 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
 
   r.post(
     '/api/wallet/connect',
-    { schema: { body: z.object({ provider: z.string() }), response: { 200: walletAccountSchema } } },
-    async (req) => ({ address: 'STUBwa11et', balanceSol: 12.5, chain: 'solana', provider: req.body.provider }),
+    {
+      schema: { body: z.object({ provider: z.string() }), response: { 200: walletAccountSchema } },
+    },
+    async (req) => ({
+      address: 'STUBwa11et',
+      balanceSol: 12.5,
+      chain: 'solana',
+      provider: req.body.provider,
+    }),
   );
 
   r.get(
     '/api/feed/:matchId',
-    { schema: { params: z.object({ matchId: z.string() }), response: { 200: matchSnapshotSchema } } },
+    {
+      schema: { params: z.object({ matchId: z.string() }), response: { 200: matchSnapshotSchema } },
+    },
     async (req) => ({
       matchId: req.params.matchId,
       clockMin: 12,
@@ -1080,7 +1142,9 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
 
   r.get(
     '/api/me',
-    { schema: { querystring: z.object({ address: z.string() }), response: { 200: profileSchema } } },
+    {
+      schema: { querystring: z.object({ address: z.string() }), response: { 200: profileSchema } },
+    },
     async (req) => ({
       address: req.query.address,
       handle: 'stubcaller',
@@ -1096,7 +1160,12 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
 
   r.get(
     '/api/leaderboard',
-    { schema: { querystring: z.object({ address: z.string() }), response: { 200: leaderboardSchema } } },
+    {
+      schema: {
+        querystring: z.object({ address: z.string() }),
+        response: { 200: leaderboardSchema },
+      },
+    },
     async () => ({
       entries: [
         { rank: 1, handle: 'goalgod', accuracy: 0.81, streak: 6, calls: 40, you: false },
@@ -1105,15 +1174,18 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
     }),
   );
 
-  r.get(
-    '/api/fixtures/upcoming',
-    { schema: { response: { 200: fixturesSchema } } },
-    async () => ({
-      items: [
-        { id: 'm1', home: BRA, away: ARG, kickoff: 1_752_000_000_000, stage: 'Group A', venue: 'MetLife' },
-      ],
-    }),
-  );
+  r.get('/api/fixtures/upcoming', { schema: { response: { 200: fixturesSchema } } }, async () => ({
+    items: [
+      {
+        id: 'm1',
+        home: BRA,
+        away: ARG,
+        kickoff: 1_752_000_000_000,
+        stage: 'Group A',
+        venue: 'MetLife',
+      },
+    ],
+  }));
 
   const overview = (address: string) => ({
     address,
@@ -1121,25 +1193,46 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
     currency: 'SOL',
     fiatRate: 180,
     activity: [
-      { id: 'a1', type: 'deposit' as const, amountSol: 5, status: 'settled' as const, ts: 1_751_000_000_000 },
+      {
+        id: 'a1',
+        type: 'deposit' as const,
+        amountSol: 5,
+        status: 'settled' as const,
+        ts: 1_751_000_000_000,
+      },
     ],
   });
 
   r.get(
     '/api/wallet',
-    { schema: { querystring: z.object({ address: z.string() }), response: { 200: walletOverviewSchema } } },
+    {
+      schema: {
+        querystring: z.object({ address: z.string() }),
+        response: { 200: walletOverviewSchema },
+      },
+    },
     async (req) => overview(req.query.address),
   );
 
   r.post(
     '/api/wallet/deposit',
-    { schema: { body: z.object({ address: z.string(), amountSol: z.number() }), response: { 200: walletOverviewSchema } } },
+    {
+      schema: {
+        body: z.object({ address: z.string(), amountSol: z.number() }),
+        response: { 200: walletOverviewSchema },
+      },
+    },
     async (req) => overview(req.body.address),
   );
 
   r.post(
     '/api/wallet/withdraw',
-    { schema: { body: z.object({ address: z.string(), amountSol: z.number(), method: z.string() }), response: { 200: walletOverviewSchema } } },
+    {
+      schema: {
+        body: z.object({ address: z.string(), amountSol: z.number(), method: z.string() }),
+        response: { 200: walletOverviewSchema },
+      },
+    },
     async (req) => overview(req.body.address),
   );
 }
@@ -1152,7 +1245,7 @@ Add import and registration after `app.register(predictionRoutes);`:
 ```ts
 import { stubRoutes } from './routes/stubs.js';
 // ...
-  app.register(stubRoutes);
+app.register(stubRoutes);
 ```
 
 - [ ] **Step 3: Write the test `test/stubs.test.ts`**
@@ -1162,8 +1255,12 @@ import { describe, it, expect } from 'vitest';
 import { buildApp } from '../src/app.js';
 import type { Db } from '../src/db/types.js';
 import {
-  fixturesSchema, leaderboardSchema, matchSnapshotSchema, profileSchema,
-  walletAccountSchema, walletOverviewSchema,
+  fixturesSchema,
+  leaderboardSchema,
+  matchSnapshotSchema,
+  profileSchema,
+  walletAccountSchema,
+  walletOverviewSchema,
 } from '../src/schemas/index.js';
 
 const fakeDb: Db = { query: async () => ({ rows: [] }) };
@@ -1171,7 +1268,11 @@ const fakeDb: Db = { query: async () => ({ rows: [] }) };
 describe('stub routes are schema-valid', () => {
   it('POST /api/wallet/connect', async () => {
     const app = buildApp({ db: fakeDb });
-    const res = await app.inject({ method: 'POST', url: '/api/wallet/connect', payload: { provider: 'phantom' } });
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/wallet/connect',
+      payload: { provider: 'phantom' },
+    });
     expect(() => walletAccountSchema.parse(res.json())).not.toThrow();
     await app.close();
   });
@@ -1185,10 +1286,24 @@ describe('stub routes are schema-valid', () => {
 
   it('GET /api/me, /api/leaderboard, /api/fixtures/upcoming, /api/wallet', async () => {
     const app = buildApp({ db: fakeDb });
-    expect(() => profileSchema.parse((await app.inject({ method: 'GET', url: '/api/me?address=a' })).json())).not.toThrow();
-    expect(() => leaderboardSchema.parse((await app.inject({ method: 'GET', url: '/api/leaderboard?address=a' })).json())).not.toThrow();
-    expect(() => fixturesSchema.parse((await app.inject({ method: 'GET', url: '/api/fixtures/upcoming' })).json())).not.toThrow();
-    expect(() => walletOverviewSchema.parse((await app.inject({ method: 'GET', url: '/api/wallet?address=a' })).json())).not.toThrow();
+    expect(() =>
+      profileSchema.parse((await app.inject({ method: 'GET', url: '/api/me?address=a' })).json()),
+    ).not.toThrow();
+    expect(() =>
+      leaderboardSchema.parse(
+        (await app.inject({ method: 'GET', url: '/api/leaderboard?address=a' })).json(),
+      ),
+    ).not.toThrow();
+    expect(() =>
+      fixturesSchema.parse(
+        (await app.inject({ method: 'GET', url: '/api/fixtures/upcoming' })).json(),
+      ),
+    ).not.toThrow();
+    expect(() =>
+      walletOverviewSchema.parse(
+        (await app.inject({ method: 'GET', url: '/api/wallet?address=a' })).json(),
+      ),
+    ).not.toThrow();
     await app.close();
   });
 });
@@ -1216,6 +1331,7 @@ git commit -m "add valid-shaped stub routes for remaining seams"
 ### Task 8: Render deploy config, agent adaptation, README
 
 **Files:**
+
 - Create: `render.yaml`, `README.md`
 - Modify: `.claude/agents/{arq,back,bug,qa,redteam,scribe}.md` (backend framing)
 
@@ -1274,6 +1390,7 @@ and wires `DATABASE_URL`. The start command runs the migration then boots the se
 - [ ] **Step 3: Adapt each agent file to backend framing**
 
 For each of `arq, back, bug, qa, redteam, scribe` in `.claude/agents/`, edit the description/body so it targets this service. Concretely:
+
 - Replace mentions of "PWA / React / Vite / frontend / 60fps / Playwright" with "Fastify API / Postgres / Solana / TxLINE feed".
 - `qa.md`: reframe from "on-screen E2E (Playwright)" to "integration + contract tests (`fastify.inject`, Zod)".
 - `bug.md`: keep as the quality gate but for Node/Fastify/SQL/web3 code.
@@ -1299,6 +1416,7 @@ git commit -m "add render blueprint, readme and backend-framed agents"
 ## Self-Review
 
 **Spec coverage:**
+
 - §3 infra (Render) → Task 8 `render.yaml`. ✓
 - §4 stack → Task 1 deps. ✓
 - §5 structure → Tasks 1–7 create the files. ✓
