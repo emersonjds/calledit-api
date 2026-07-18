@@ -15,7 +15,9 @@ export async function predictionRoutes(app: FastifyInstance): Promise<void> {
 
   r.get(
     '/api/predictions',
-    { schema: { querystring: z.object({ address: z.string() }), response: { 200: historySchema } } },
+    {
+      schema: { querystring: z.object({ address: z.string() }), response: { 200: historySchema } },
+    },
     async (req) => ({ items: await listByAddress(app.db, req.query.address) }),
   );
 

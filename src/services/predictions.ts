@@ -62,8 +62,20 @@ export async function createPrediction(db: Db, input: CommitPredictionInput): Pr
         at_clock_min, window_min, status, tx_hash, stamped_at, seq, epoch_day)
      values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'resolving',$11,$12,$13,$14)`,
     [
-      id, input.address, input.matchId, input.market, provable, input.stakeSol, multiplier,
-      potentialSol, atClockMin, windowMin, txHash, stampedAt, seq, epochDay,
+      id,
+      input.address,
+      input.matchId,
+      input.market,
+      provable,
+      input.stakeSol,
+      multiplier,
+      potentialSol,
+      atClockMin,
+      windowMin,
+      txHash,
+      stampedAt,
+      seq,
+      epochDay,
     ],
   );
 

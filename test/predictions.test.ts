@@ -29,9 +29,22 @@ function makeApp() {
 
 function fullRow(id: string, address: string) {
   return {
-    id, address, match_id: 'm1', market: 'goal', provable: true, stake_sol: '0.5',
-    multiplier: '2', potential_sol: '1', at_clock_min: 0, window_min: 5, status: 'resolving',
-    tx_hash: `stub-${id}`, stamped_at: '1', seq: 1, epoch_day: 20000, settlement: null,
+    id,
+    address,
+    match_id: 'm1',
+    market: 'goal',
+    provable: true,
+    stake_sol: '0.5',
+    multiplier: '2',
+    potential_sol: '1',
+    at_clock_min: 0,
+    window_min: 5,
+    status: 'resolving',
+    tx_hash: `stub-${id}`,
+    stamped_at: '1',
+    seq: 1,
+    epoch_day: 20000,
+    settlement: null,
   };
 }
 
@@ -39,7 +52,8 @@ describe('predictions routes', () => {
   it('POST creates a schema-valid prediction', async () => {
     const app = makeApp();
     const res = await app.inject({
-      method: 'POST', url: '/api/predictions',
+      method: 'POST',
+      url: '/api/predictions',
       payload: { matchId: 'm1', market: 'goal', stakeSol: 0.5, address: 'alice' },
     });
     expect(res.statusCode).toBe(200);
@@ -58,7 +72,8 @@ describe('predictions routes', () => {
   it('GET list returns items for the address', async () => {
     const app = makeApp();
     await app.inject({
-      method: 'POST', url: '/api/predictions',
+      method: 'POST',
+      url: '/api/predictions',
       payload: { matchId: 'm1', market: 'goal', stakeSol: 0.5, address: 'alice' },
     });
     const res = await app.inject({ method: 'GET', url: '/api/predictions?address=alice' });

@@ -18,13 +18,22 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
 
   r.post(
     '/api/wallet/connect',
-    { schema: { body: z.object({ provider: z.string() }), response: { 200: walletAccountSchema } } },
-    async (req) => ({ address: 'STUBwa11et', balanceSol: 12.5, chain: 'solana' as const, provider: req.body.provider }),
+    {
+      schema: { body: z.object({ provider: z.string() }), response: { 200: walletAccountSchema } },
+    },
+    async (req) => ({
+      address: 'STUBwa11et',
+      balanceSol: 12.5,
+      chain: 'solana' as const,
+      provider: req.body.provider,
+    }),
   );
 
   r.get(
     '/api/feed/:matchId',
-    { schema: { params: z.object({ matchId: z.string() }), response: { 200: matchSnapshotSchema } } },
+    {
+      schema: { params: z.object({ matchId: z.string() }), response: { 200: matchSnapshotSchema } },
+    },
     async (req) => ({
       matchId: req.params.matchId,
       clockMin: 12,
@@ -45,7 +54,9 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
 
   r.get(
     '/api/me',
-    { schema: { querystring: z.object({ address: z.string() }), response: { 200: profileSchema } } },
+    {
+      schema: { querystring: z.object({ address: z.string() }), response: { 200: profileSchema } },
+    },
     async (req) => ({
       address: req.query.address,
       handle: 'stubcaller',
@@ -61,7 +72,12 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
 
   r.get(
     '/api/leaderboard',
-    { schema: { querystring: z.object({ address: z.string() }), response: { 200: leaderboardSchema } } },
+    {
+      schema: {
+        querystring: z.object({ address: z.string() }),
+        response: { 200: leaderboardSchema },
+      },
+    },
     async () => ({
       entries: [
         { rank: 1, handle: 'goalgod', accuracy: 0.81, streak: 6, calls: 40, you: false },
@@ -70,15 +86,18 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
     }),
   );
 
-  r.get(
-    '/api/fixtures/upcoming',
-    { schema: { response: { 200: fixturesSchema } } },
-    async () => ({
-      items: [
-        { id: 'm1', home: BRA, away: ARG, kickoff: 1_752_000_000_000, stage: 'Group A', venue: 'MetLife' },
-      ],
-    }),
-  );
+  r.get('/api/fixtures/upcoming', { schema: { response: { 200: fixturesSchema } } }, async () => ({
+    items: [
+      {
+        id: 'm1',
+        home: BRA,
+        away: ARG,
+        kickoff: 1_752_000_000_000,
+        stage: 'Group A',
+        venue: 'MetLife',
+      },
+    ],
+  }));
 
   const overview = (address: string) => ({
     address,
@@ -86,25 +105,46 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
     currency: 'SOL',
     fiatRate: 180,
     activity: [
-      { id: 'a1', type: 'deposit' as const, amountSol: 5, status: 'settled' as const, ts: 1_751_000_000_000 },
+      {
+        id: 'a1',
+        type: 'deposit' as const,
+        amountSol: 5,
+        status: 'settled' as const,
+        ts: 1_751_000_000_000,
+      },
     ],
   });
 
   r.get(
     '/api/wallet',
-    { schema: { querystring: z.object({ address: z.string() }), response: { 200: walletOverviewSchema } } },
+    {
+      schema: {
+        querystring: z.object({ address: z.string() }),
+        response: { 200: walletOverviewSchema },
+      },
+    },
     async (req) => overview(req.query.address),
   );
 
   r.post(
     '/api/wallet/deposit',
-    { schema: { body: z.object({ address: z.string(), amountSol: z.number() }), response: { 200: walletOverviewSchema } } },
+    {
+      schema: {
+        body: z.object({ address: z.string(), amountSol: z.number() }),
+        response: { 200: walletOverviewSchema },
+      },
+    },
     async (req) => overview(req.body.address),
   );
 
   r.post(
     '/api/wallet/withdraw',
-    { schema: { body: z.object({ address: z.string(), amountSol: z.number(), method: z.string() }), response: { 200: walletOverviewSchema } } },
+    {
+      schema: {
+        body: z.object({ address: z.string(), amountSol: z.number(), method: z.string() }),
+        response: { 200: walletOverviewSchema },
+      },
+    },
     async (req) => overview(req.body.address),
   );
 }

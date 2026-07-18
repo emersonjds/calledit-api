@@ -100,14 +100,14 @@ create index on predictions (match_id);
 
 All request/response bodies validated by Zod; OpenAPI generated from the same schemas.
 
-| Method + path                   | Returns (Zod shape)                                                                 |
-| ------------------------------- | ---------------------------------------------------------------------------------- |
-| `POST /api/wallet/connect`      | `WalletAccount { address, balanceSol, chain, provider }`                            |
-| `GET /api/feed/:matchId`        | `MatchSnapshot { matchId, clockMin, period, home, away, score, pct, events, markets, live }` |
+| Method + path                   | Returns (Zod shape)                                                                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/wallet/connect`      | `WalletAccount { address, balanceSol, chain, provider }`                                                                              |
+| `GET /api/feed/:matchId`        | `MatchSnapshot { matchId, clockMin, period, home, away, score, pct, events, markets, live }`                                          |
 | `POST /api/predictions`         | `Prediction { id, matchId, market, provable, stakeSol, multiplier, potentialSol, atClockMin, windowMin, status, stamp, settlement? }` |
-| `GET /api/predictions/:id`      | same `Prediction` (poll until `won`/`lost` with `settlement`)                       |
-| `GET /api/me?address=`          | `ProfileDto { address, handle, accuracy, totalCalls, wonCalls, bestStreak, currentStreak, rank, balanceSol }` |
-| `GET /api/leaderboard?address=` | `LeaderboardDto { entries[] }`                                                      |
+| `GET /api/predictions/:id`      | same `Prediction` (poll until `won`/`lost` with `settlement`)                                                                         |
+| `GET /api/me?address=`          | `ProfileDto { address, handle, accuracy, totalCalls, wonCalls, bestStreak, currentStreak, rank, balanceSol }`                         |
+| `GET /api/leaderboard?address=` | `LeaderboardDto { entries[] }`                                                                                                        |
 
 Hard schema rules honored: `stamp.seq >= 1` (int), `epochDay` int, `provable` gates settlement.
 Plus `GET /health` (liveness) and `GET /docs` (Swagger UI, Fastify logo removed via injected CSS).
