@@ -13,6 +13,17 @@ function isPair(value: unknown): value is [number, number] {
   );
 }
 
+function isValidSeq(seq: unknown): seq is number {
+  return typeof seq === 'number' && Number.isInteger(seq) && seq >= 1;
+}
+
+// verify against live sample: TxLINE's `ts` unit (seconds vs milliseconds) is
+// unconfirmed at doc time. Values below 1e12 can't be a millisecond timestamp
+// for any date in this era, so treat them as seconds.
+export function toMillis(ts: number): number {
+  return ts < 1e12 ? ts * 1000 : ts;
+}
+
 interface RawScorePayload {
   fixtureId: string | number;
   seq: number;
@@ -34,11 +45,7 @@ interface RawScorePayload {
 function isRawScorePayload(raw: unknown): raw is RawScorePayload {
   if (!isRecord(raw)) return false;
   if (typeof raw.fixtureId !== 'string' && typeof raw.fixtureId !== 'number') return false;
-  if (
-    typeof raw.seq !== 'number' ||
-    typeof raw.ts !== 'number' ||
-    typeof raw.gameState !== 'string'
-  ) {
+  if (!isValidSeq(raw.seq) || typeof raw.ts !== 'number' || typeof raw.gameState !== 'string') {
     return false;
   }
   if (!isRecord(raw.scoreSoccer)) return false;
@@ -52,7 +59,7 @@ export function normalizeScoreEvent(raw: unknown): NormalizedScoreEvent | null {
   return {
     fixtureId: String(raw.fixtureId),
     seq: raw.seq,
-    ts: raw.ts,
+    ts: toMillis(raw.ts),
     gameState: raw.gameState,
     ...(raw.action !== undefined ? { action: raw.action } : {}),
     cumulative: {
@@ -93,7 +100,7 @@ function isNumberArray(value: unknown): value is number[] {
 function isRawOddsPayload(raw: unknown): raw is RawOddsPayload {
   if (!isRecord(raw)) return false;
   if (typeof raw.fixtureId !== 'string' && typeof raw.fixtureId !== 'number') return false;
-  if (typeof raw.seq !== 'number' || typeof raw.ts !== 'number') return false;
+  if (!isValidSeq(raw.seq) || typeof raw.ts !== 'number') return false;
   if (!isNumberArray(raw.Pct) || raw.Pct.length < 3) return false;
   if (!isStringArray(raw.PriceNames) || !isNumberArray(raw.Prices)) return false;
   if (typeof raw.InRunning !== 'boolean' || typeof raw.GameState !== 'string') return false;
@@ -110,7 +117,7 @@ export function normalizeOddsEvent(raw: unknown): NormalizedOddsEvent | null {
   return {
     fixtureId: String(raw.fixtureId),
     seq: raw.seq,
-    ts: raw.ts,
+    ts: toMillis(raw.ts),
     pct: { home: home ?? 0, draw: draw ?? 0, away: away ?? 0 },
     markets,
     inRunning: raw.InRunning,
