@@ -4,7 +4,6 @@ import { z } from 'zod';
 import {
   fixturesSchema,
   leaderboardSchema,
-  matchSnapshotSchema,
   profileSchema,
   walletAccountSchema,
   walletOverviewSchema,
@@ -26,29 +25,6 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
       balanceSol: 12.5,
       chain: 'solana' as const,
       provider: req.body.provider,
-    }),
-  );
-
-  r.get(
-    '/api/feed/:matchId',
-    {
-      schema: { params: z.object({ matchId: z.string() }), response: { 200: matchSnapshotSchema } },
-    },
-    async (req) => ({
-      matchId: req.params.matchId,
-      clockMin: 12,
-      period: '1H' as const,
-      home: BRA,
-      away: ARG,
-      score: [1, 0] as [number, number],
-      pct: { home: 0.55, draw: 0.25, away: 0.2 },
-      events: [],
-      markets: [
-        { market: 'goal', multiplier: 2.0 },
-        { market: 'corner', multiplier: 1.6 },
-        { market: 'card', multiplier: 1.8 },
-      ],
-      live: true,
     }),
   );
 
