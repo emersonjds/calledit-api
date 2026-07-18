@@ -33,7 +33,22 @@ export function buildApp(opts: AppOptions): FastifyInstance {
 
   app.register(swagger, {
     openapi: {
-      info: { title: 'Called It API', version: '0.1.0' },
+      info: {
+        title: 'Called It API',
+        version: '0.1.0',
+        description:
+          'Backend for Called It — TxLINE feed ingestion, on-chain-stamped predictions, and settlement.',
+      },
+      servers: [{ url: 'http://localhost:3000', description: 'local' }],
+      tags: [
+        { name: 'health', description: 'Service liveness.' },
+        { name: 'predictions', description: 'Commit, list, and fetch calls.' },
+        { name: 'feed', description: 'Live match snapshots derived from the TxLINE feed.' },
+        { name: 'fixtures', description: 'Upcoming World Cup fixtures from TxLINE.' },
+        { name: 'wallet', description: 'Wallet connect, balance, deposit, and withdraw.' },
+        { name: 'profile', description: 'Caller stats and accuracy.' },
+        { name: 'leaderboard', description: 'Ranked callers by accuracy and streak.' },
+      ],
     },
     transform: jsonSchemaTransform,
   });
