@@ -123,7 +123,9 @@ Plus `GET /health` (liveness) and `GET /docs` (Swagger UI, Fastify logo removed 
 **Milestone 1 — API skeleton (this build):** Fastify app + clean Swagger + CORS + Zod type-provider +
 error handler + env + Postgres pool + schema/migrate + the six endpoints returning valid shapes
 (predictions persisted to/read from DB; wallet/feed/profile/leaderboard served as valid-shaped stubs) +
-`/health` + deploy-ready on Render. Runs locally and deploys.
+`/health` + deploy-ready on Render. Runs locally and deploys. In this milestone the prediction `stamp`
+(`txHash`, `seq`, `epochDay`) is a valid-shaped **stub** — no chain yet — replaced by the real on-chain
+stamp in milestone 3; `status` starts `resolving`.
 
 **Milestone 2 — real feed:** SSE ingester (`/scores/stream` + `/odds/stream`, auth, auto-reconnect,
 401-renew) persisting raw events to `feed_events`; match-state projector folding events into
