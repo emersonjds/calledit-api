@@ -60,7 +60,7 @@ Issues to fix:
 ### Severity levels
 
 - CRITICAL — blocks deploy. Crashes, data/fund loss, security, forgeable "called it first" ordering, call editable after lock, blind-signing, double settlement, devnet/mainnet mix, another wallet's call exposed.
-- MAJOR — wrong behavior, broken features, accessibility failures, non-English text leaking into the UI.
+- MAJOR — wrong behavior, broken features, accessibility failures, non-English text leaking into API responses.
 - MINOR — typos, style inconsistencies, missing edge cases.
 - NOTE — suggestions, optimization opportunities.
 
@@ -140,7 +140,7 @@ Your review report must include:
 
 ## Communication style
 
-- Be direct: "This breaks on mobile because of X"
+- Be direct: "This 500s when the feed lacks a proof because of X"
 - Always bring evidence: line numbers, error messages
 - Praise good code too — it builds team trust
 - When rejecting: be specific about what to change and why
