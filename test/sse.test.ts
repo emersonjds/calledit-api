@@ -22,4 +22,11 @@ describe('parseSseChunk', () => {
     expect(events).toEqual(['{"a":1}']);
     expect(rest).toBe('');
   });
+
+  it('handles CRLF record separators', () => {
+    const buffer = 'data: {"a":1}\r\n\r\ndata: {"b":2}\r\n\r\n';
+    const { events, rest } = parseSseChunk(buffer);
+    expect(events).toEqual(['{"a":1}', '{"b":2}']);
+    expect(rest).toBe('');
+  });
 });
