@@ -25,6 +25,7 @@ const DIFFS: { type: MatchEvent['type']; home: keyof ScoreCumulative; away: keyo
 
 function makeEvent(fixtureId: string, seq: number, type: MatchEvent['type'], side: 'home' | 'away', n: number): MatchEvent {
   const suffix = n > 0 ? `-${n}` : '';
+  // ponytail: clockMin hardcoded to 0, the feed carries no clock yet
   return { id: `${fixtureId}-${seq}-${type}-${side}${suffix}`, type, side, clockMin: 0 };
 }
 
@@ -57,6 +58,7 @@ export function projectSnapshot(
 
   const snapshot: MatchSnapshot = {
     matchId,
+    // ponytail: clockMin hardcoded to 0, the feed carries no clock yet
     clockMin: 0,
     period: mapPeriod(latestScore?.gameState ?? latestOdds?.gameState ?? ''),
     home: teams.home,
