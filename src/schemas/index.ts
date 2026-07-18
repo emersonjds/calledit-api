@@ -129,6 +129,9 @@ export const commitPredictionSchema = z.object({
   address: z.string(),
 });
 
+export type TeamInfo = z.infer<typeof teamInfoSchema>;
+export type MatchEvent = z.infer<typeof matchEventSchema>;
+export type MatchSnapshot = z.infer<typeof matchSnapshotSchema>;
 export type Market = z.infer<typeof marketSchema>;
 export type Prediction = z.infer<typeof predictionSchema>;
 export type CommitPredictionInput = z.infer<typeof commitPredictionSchema>;
