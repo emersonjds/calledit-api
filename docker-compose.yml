@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: calledit-postgres
+    environment:
+      POSTGRES_USER: calledit
+      POSTGRES_PASSWORD: calledit
+      POSTGRES_DB: calledit
+    ports:
+      - '5432:5432'
+    volumes:
+      - calledit-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U calledit -d calledit']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  calledit-pgdata:

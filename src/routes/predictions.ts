@@ -9,14 +9,28 @@ export async function predictionRoutes(app: FastifyInstance): Promise<void> {
 
   r.post(
     '/api/predictions',
-    { schema: { body: commitPredictionSchema, response: { 200: predictionSchema } } },
+    {
+      schema: {
+        tags: ['predictions'],
+        summary: 'Commit a prediction',
+        description: 'Stakes SOL on a market for a match and stamps the call on-chain before settlement.',
+        body: commitPredictionSchema,
+        response: { 200: predictionSchema },
+      },
+    },
     async (req) => createPrediction(app.db, req.body),
   );
 
   r.get(
     '/api/predictions',
     {
-      schema: { querystring: z.object({ address: z.string() }), response: { 200: historySchema } },
+      schema: {
+        tags: ['predictions'],
+        summary: 'List a caller’s predictions',
+        description: 'Returns prediction history for a wallet address, most recent first.',
+        querystring: z.object({ address: z.string() }),
+        response: { 200: historySchema },
+      },
     },
     async (req) => ({ items: await listByAddress(app.db, req.query.address) }),
   );
@@ -25,6 +39,9 @@ export async function predictionRoutes(app: FastifyInstance): Promise<void> {
     '/api/predictions/:id',
     {
       schema: {
+        tags: ['predictions'],
+        summary: 'Get a prediction by id',
+        description: 'Returns a single prediction including its on-chain stamp and settlement, if resolved.',
         params: z.object({ id: z.string() }),
         response: {
           200: predictionSchema,

@@ -2,7 +2,6 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import {
-  fixturesSchema,
   leaderboardSchema,
   profileSchema,
   walletAccountSchema,
@@ -10,16 +9,19 @@ import {
 } from '../schemas/index.js';
 import type { WalletAccount, WalletOverview } from '../schemas/index.js';
 
-const BRA = { code: 'BRA', name: 'Brazil', flag: '🇧🇷' };
-const ARG = { code: 'ARG', name: 'Argentina', flag: '🇦🇷' };
-
 export async function stubRoutes(app: FastifyInstance): Promise<void> {
   const r = app.withTypeProvider<ZodTypeProvider>();
 
   r.post(
     '/api/wallet/connect',
     {
-      schema: { body: z.object({ provider: z.string() }), response: { 200: walletAccountSchema } },
+      schema: {
+        tags: ['wallet'],
+        summary: 'Connect a wallet',
+        description: 'Registers a wallet provider (e.g. Phantom) for the session. Stubbed pending real signing.',
+        body: z.object({ provider: z.string() }),
+        response: { 200: walletAccountSchema },
+      },
     },
     async (req): Promise<WalletAccount> => ({
       address: 'stub-wallet-address',
@@ -32,7 +34,13 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
   r.get(
     '/api/me',
     {
-      schema: { querystring: z.object({ address: z.string() }), response: { 200: profileSchema } },
+      schema: {
+        tags: ['profile'],
+        summary: 'Get caller profile',
+        description: 'Returns accuracy, streak, and balance stats for a wallet address. Stubbed.',
+        querystring: z.object({ address: z.string() }),
+        response: { 200: profileSchema },
+      },
     },
     async (req) => ({
       address: req.query.address,
@@ -51,6 +59,9 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
     '/api/leaderboard',
     {
       schema: {
+        tags: ['leaderboard'],
+        summary: 'Get the leaderboard',
+        description: 'Returns callers ranked by accuracy and streak, with the requesting address highlighted. Stubbed.',
         querystring: z.object({ address: z.string() }),
         response: { 200: leaderboardSchema },
       },
@@ -62,19 +73,6 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
       ],
     }),
   );
-
-  r.get('/api/fixtures/upcoming', { schema: { response: { 200: fixturesSchema } } }, async () => ({
-    items: [
-      {
-        id: 'm1',
-        home: BRA,
-        away: ARG,
-        kickoff: 1_752_000_000_000,
-        stage: 'Group A',
-        venue: 'MetLife',
-      },
-    ],
-  }));
 
   const overview = (address: string): WalletOverview => ({
     address,
@@ -96,6 +94,9 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
     '/api/wallet',
     {
       schema: {
+        tags: ['wallet'],
+        summary: 'Get wallet overview',
+        description: 'Returns SOL balance, fiat rate, and recent activity for a wallet address. Stubbed.',
         querystring: z.object({ address: z.string() }),
         response: { 200: walletOverviewSchema },
       },
@@ -107,6 +108,9 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
     '/api/wallet/deposit',
     {
       schema: {
+        tags: ['wallet'],
+        summary: 'Deposit SOL',
+        description: 'Credits a wallet with SOL and returns the updated overview. Stubbed.',
         body: z.object({ address: z.string(), amountSol: z.number() }),
         response: { 200: walletOverviewSchema },
       },
@@ -118,6 +122,9 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
     '/api/wallet/withdraw',
     {
       schema: {
+        tags: ['wallet'],
+        summary: 'Withdraw SOL',
+        description: 'Debits a wallet with SOL via the given method and returns the updated overview. Stubbed.',
         body: z.object({ address: z.string(), amountSol: z.number(), method: z.string() }),
         response: { 200: walletOverviewSchema },
       },

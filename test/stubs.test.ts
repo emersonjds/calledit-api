@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { buildApp } from '../src/app.js';
 import type { Db } from '../src/db/types.js';
 import {
-  fixturesSchema,
   leaderboardSchema,
   matchSnapshotSchema,
   profileSchema,
@@ -31,14 +30,12 @@ describe('stub routes are schema-valid', () => {
     await app.close();
   });
 
-  it('GET /api/me, /api/leaderboard, /api/fixtures/upcoming, /api/wallet', async () => {
+  it('GET /api/me, /api/leaderboard, /api/wallet', async () => {
     const app = buildApp({ db: fakeDb });
     const meRes = await app.inject({ method: 'GET', url: '/api/me?address=a' });
     expect(() => profileSchema.parse(meRes.json())).not.toThrow();
     const lbRes = await app.inject({ method: 'GET', url: '/api/leaderboard?address=a' });
     expect(() => leaderboardSchema.parse(lbRes.json())).not.toThrow();
-    const fixRes = await app.inject({ method: 'GET', url: '/api/fixtures/upcoming' });
-    expect(() => fixturesSchema.parse(fixRes.json())).not.toThrow();
     const walRes = await app.inject({ method: 'GET', url: '/api/wallet?address=a' });
     expect(() => walletOverviewSchema.parse(walRes.json())).not.toThrow();
     await app.close();

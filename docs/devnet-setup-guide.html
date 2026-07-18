@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Called It — Setup Devnet</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 18mm 16mm;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        color: #14181d;
+        font-size: 11.5px;
+        line-height: 1.5;
+        margin: 0;
+      }
+      h1 {
+        font-size: 22px;
+        margin: 0 0 2px;
+        color: #0b0f14;
+      }
+      .sub {
+        color: #5b6672;
+        margin: 0 0 16px;
+        font-size: 11px;
+      }
+      h2 {
+        font-size: 14px;
+        margin: 20px 0 6px;
+        padding: 5px 9px;
+        background: #0b0f14;
+        color: #b6ff3c;
+        border-radius: 5px;
+      }
+      h3 {
+        font-size: 12px;
+        margin: 12px 0 4px;
+        color: #0b0f14;
+      }
+      code,
+      .mono {
+        font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+        font-size: 10px;
+        background: #f1f4f7;
+        padding: 1px 4px;
+        border-radius: 3px;
+        word-break: break-all;
+      }
+      pre {
+        background: #0b0f14;
+        color: #e6edf3;
+        padding: 9px 11px;
+        border-radius: 6px;
+        font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+        font-size: 9.5px;
+        line-height: 1.45;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      pre code {
+        background: none;
+        padding: 0;
+        color: inherit;
+      }
+      .you {
+        border-left: 4px solid #ff7a18;
+        background: #fff6ef;
+        padding: 8px 12px;
+        border-radius: 0 6px 6px 0;
+        margin: 8px 0;
+      }
+      .auto {
+        border-left: 4px solid #4a90d9;
+        background: #eff5fb;
+        padding: 8px 12px;
+        border-radius: 0 6px 6px 0;
+        margin: 8px 0;
+      }
+      .tag {
+        display: inline-block;
+        font-size: 9px;
+        font-weight: 700;
+        padding: 1px 7px;
+        border-radius: 10px;
+        vertical-align: middle;
+      }
+      .tag-you {
+        background: #ff7a18;
+        color: #fff;
+      }
+      .tag-auto {
+        background: #4a90d9;
+        color: #fff;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 10px;
+        margin: 6px 0;
+      }
+      th,
+      td {
+        border: 1px solid #d6dde4;
+        padding: 4px 7px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: #eef2f6;
+      }
+      .pub {
+        display: block;
+        background: #0b0f14;
+        color: #b6ff3c;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        margin: 6px 0;
+        text-align: center;
+        letter-spacing: 0.3px;
+      }
+      ol,
+      ul {
+        margin: 5px 0 8px;
+        padding-left: 20px;
+      }
+      li {
+        margin: 2px 0;
+      }
+      .note {
+        font-size: 10px;
+        color: #5b6672;
+      }
+      .keep {
+        page-break-inside: avoid;
+      }
+      a {
+        color: #1a6fc4;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Called It — Setup Devnet</h1>
+    <p class="sub">
+      Conectar o feed TxLINE, obter as credenciais e por o backend pra rodar — passo a passo.
+      <span class="tag tag-you">VOCÊ FAZ</span> = ação sua no navegador ·
+      <span class="tag tag-auto">AUTOMÁTICO</span> = eu rodo o script.
+    </p>
+
+    <h2>0. Por que precisa de SOL (não é bug)</h2>
+    <p>
+      A doc oficial da TxODDS confirma: <em>"Do I need SOL for the free tier? <strong>Yes.</strong></em>
+      No TxL purchase is required, but the Solana wallet still needs SOL on the selected network to submit
+      the on-chain subscription transaction and cover account rent."<em> On devnet, request devnet SOL
+      before starting."</em>
+    </p>
+    <p>
+      Ou seja: <strong>"free" = sem pagar o token TxL</strong>, mas as credenciais nascem de uma
+      transação on-chain (<code>subscribe</code>), e toda transação Solana custa uma taxa em SOL. No
+      <strong>devnet</strong> o SOL é grátis (faucet). O airdrop da linha de comando só está
+      <strong>temporariamente rate-limited</strong> — por isso usamos a faucet web (pinestake).
+    </p>
+
+    <h2>1. Financiar a wallet de serviço <span class="tag tag-you">VOCÊ FAZ</span></h2>
+    <p>Já gerei a wallet de serviço do backend (devnet). O endereço público (pode compartilhar):</p>
+    <span class="pub">2t5SHE9udJWswb5GqKMzvRhE836uyzkdkQJGf1sHhi8p</span>
+    <div class="you keep">
+      <h3>Opção A — Pinestake (a que você achou)</h3>
+      <ol>
+        <li>Abra <a href="https://www.pinestake.com/en/faucet">pinestake.com/en/faucet</a></li>
+        <li>Selecione <strong>Devnet</strong> (não Testnet)</li>
+        <li>Cole o endereço acima em "Wallet address", peça <strong>1 SOL</strong>, "Confirm &amp; Send"</li>
+        <li>Limite: 1 request a cada 8h — 1 SOL é de sobra pra dezenas de subscribes</li>
+      </ol>
+      <h3>Opção B — Faucet oficial</h3>
+      <ol>
+        <li>Abra <a href="https://faucet.solana.com">faucet.solana.com</a>, rede <strong>devnet</strong></li>
+        <li>Login com GitHub, cole o endereço, peça 1–2 SOL</li>
+      </ol>
+    </div>
+    <p class="note">
+      Depois de financiar, me avisa ("tem saldo") — eu confirmo o saldo on-chain antes de seguir.
+    </p>
+
+    <h2>2. Obter as credenciais TxLINE <span class="tag tag-auto">AUTOMÁTICO</span></h2>
+    <p>Com a wallet financiada, meu script de bootstrap faz o fluxo oficial (§ quickstart), 3 passos:</p>
+    <ol>
+      <li><strong>Guest JWT</strong> — <code>POST https://txline-dev.txodds.com/auth/guest/start</code></li>
+      <li>
+        <strong>Subscribe on-chain</strong> — <code>subscribe(serviceLevel=1, weeks=4)</code> no programa
+        <code>txoracle</code> (devnet), assinado pela wallet de serviço. Devolve o <code>txSig</code>.
+      </li>
+      <li>
+        <strong>Activate</strong> — assino a mensagem <code>${txSig}::${jwt}</code> e chamo
+        <code>POST /api/token/activate</code> → recebo o <strong>apiToken</strong>.
+      </li>
+    </ol>
+    <p>
+      Resultado: <code>TXLINE_JWT</code> + <code>TXLINE_API_TOKEN</code> gravados no <code>.env</code>
+      (nunca commitados). Você não precisa fazer nada aqui — só ter financiado a wallet no passo 1.
+    </p>
+
+    <h2>3. Configurar o <code>.env</code> <span class="tag tag-auto">AUTOMÁTICO</span></h2>
+    <pre><code>NODE_ENV=development
+PORT=3000
+DATABASE_URL=postgres://calledit:calledit@localhost:5432/calledit
+NETWORK=devnet
+SOLANA_RPC_URL=https://api.devnet.solana.com
+TXORACLE_PROGRAM_ID=6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J
+TXL_TOKEN_MINT=4Zao8ocPhmMgq7PdsYWyxvqySMGx7xb9cMftPMkEokRG
+TXLINE_API_ORIGIN=https://txline-dev.txodds.com
+TXLINE_JWT=&lt;preenchido pelo bootstrap&gt;
+TXLINE_API_TOKEN=&lt;preenchido pelo bootstrap&gt;
+SERVICE_WALLET_SECRET=&lt;keypair em .devnet/ — gitignored&gt;</code></pre>
+
+    <h2>4. Rodar o backend <span class="tag tag-auto">AUTOMÁTICO</span></h2>
+    <pre><code>docker compose up -d          # Postgres local (já funciona)
+pnpm migrate                  # cria as tabelas
+pnpm dev                      # sobe a API + o ingester conecta no feed real</code></pre>
+    <p>
+      A partir daí: <code>GET /api/feed/:matchId</code> serve dados projetados do feed real, o ingester
+      grava cada evento em <code>feed_events</code>, e o Swagger fica em <code>/docs</code>.
+    </p>
+
+    <h2>5. Settlement — a prize feature (Rust/CPI)</h2>
+    <p>Duas camadas:</p>
+    <ul>
+      <li>
+        <strong>Simulação <code>.view()</code></strong> — chama <code>validate_stat</code> do txoracle e
+        lê o booleano contra o proof real. Funciona sem programa próprio. <em>Construível assim que houver
+        um proof (feito no passo 4).</em>
+      </li>
+      <li>
+        <strong>CPI real (nosso programa Anchor)</strong> — o pote que faz o CPI e libera o prêmio no
+        booleano. Pendente de destravar o toolchain <code>anchor</code> (mismatch de versão) — em
+        andamento por mim, não depende de você.
+      </li>
+    </ul>
+
+    <h2>Apêndice — endereços por rede</h2>
+    <table class="keep">
+      <tr>
+        <th></th>
+        <th>Devnet (build/teste, SOL grátis)</th>
+        <th>Mainnet (feed real-time ao vivo)</th>
+      </tr>
+      <tr>
+        <td>Program ID</td>
+        <td class="mono">6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J</td>
+        <td class="mono">9ExbZjAapQww1vfcisDmrngPinHTEfpjYRWMunJgcKaA</td>
+      </tr>
+      <tr>
+        <td>TxL mint</td>
+        <td class="mono">4Zao8ocPhmMgq7PdsYWyxvqySMGx7xb9cMftPMkEokRG</td>
+        <td class="mono">Zhw9TVKp68a1QrftncMSd6ELXKDtpVMNuMGr1jNwdeL</td>
+      </tr>
+      <tr>
+        <td>API host</td>
+        <td class="mono">https://txline-dev.txodds.com</td>
+        <td class="mono">https://txline.txodds.com</td>
+      </tr>
+      <tr>
+        <td>RPC</td>
+        <td class="mono">https://api.devnet.solana.com</td>
+        <td class="mono">https://api.mainnet-beta.solana.com</td>
+      </tr>
+      <tr>
+        <td>Service level</td>
+        <td>1 (prova o caminho on-chain)</td>
+        <td>12 = tempo real (a demo ao vivo)</td>
+      </tr>
+    </table>
+    <p class="note">
+      <strong>Devnet vs mainnet:</strong> devnet é pra <em>construir e testar</em> o caminho on-chain com
+      SOL grátis. O <strong>feed real-time do World Cup só existe no mainnet SL 12</strong> — quando for
+      pra demo ao vivo, a mesma wallet precisa de um pouco de SOL <em>real</em> (só taxas, centavos) no
+      mainnet. Nunca misture as duas redes (dá 403).
+    </p>
+  </body>
+</html>

@@ -16,7 +16,14 @@ export async function feedRoutes(app: FastifyInstance): Promise<void> {
   r.get(
     '/api/feed/:matchId',
     {
-      schema: { params: z.object({ matchId: z.string() }), response: { 200: matchSnapshotSchema } },
+      schema: {
+        tags: ['feed'],
+        summary: 'Get a live match snapshot',
+        description:
+          'Projects the recorded TxLINE score and odds events for a match into clock, score, win-probability and market state.',
+        params: z.object({ matchId: z.string() }),
+        response: { 200: matchSnapshotSchema },
+      },
     },
     async (req) => getFeedSnapshot(app.db, req.params.matchId, DEFAULT_TEAMS),
   );

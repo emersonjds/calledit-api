@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { Pool } from 'pg';
 import { buildApp } from './app.js';
 import { loadEnv } from './config/env.js';
