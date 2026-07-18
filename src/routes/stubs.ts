@@ -4,11 +4,11 @@ import { z } from 'zod';
 import {
   fixturesSchema,
   leaderboardSchema,
-  matchSnapshotSchema,
   profileSchema,
   walletAccountSchema,
   walletOverviewSchema,
 } from '../schemas/index.js';
+import type { WalletAccount, WalletOverview } from '../schemas/index.js';
 
 const BRA = { code: 'BRA', name: 'Brazil', flag: '🇧🇷' };
 const ARG = { code: 'ARG', name: 'Argentina', flag: '🇦🇷' };
@@ -21,34 +21,11 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
     {
       schema: { body: z.object({ provider: z.string() }), response: { 200: walletAccountSchema } },
     },
-    async (req) => ({
-      address: 'STUBwa11et',
+    async (req): Promise<WalletAccount> => ({
+      address: 'stub-wallet-address',
       balanceSol: 12.5,
-      chain: 'solana' as const,
+      chain: 'solana',
       provider: req.body.provider,
-    }),
-  );
-
-  r.get(
-    '/api/feed/:matchId',
-    {
-      schema: { params: z.object({ matchId: z.string() }), response: { 200: matchSnapshotSchema } },
-    },
-    async (req) => ({
-      matchId: req.params.matchId,
-      clockMin: 12,
-      period: '1H' as const,
-      home: BRA,
-      away: ARG,
-      score: [1, 0] as [number, number],
-      pct: { home: 0.55, draw: 0.25, away: 0.2 },
-      events: [],
-      markets: [
-        { market: 'goal', multiplier: 2.0 },
-        { market: 'corner', multiplier: 1.6 },
-        { market: 'card', multiplier: 1.8 },
-      ],
-      live: true,
     }),
   );
 
@@ -99,7 +76,7 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
     ],
   }));
 
-  const overview = (address: string) => ({
+  const overview = (address: string): WalletOverview => ({
     address,
     balanceSol: 12.5,
     currency: 'SOL',
@@ -107,9 +84,9 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
     activity: [
       {
         id: 'a1',
-        type: 'deposit' as const,
+        type: 'deposit',
         amountSol: 5,
-        status: 'settled' as const,
+        status: 'settled',
         ts: 1_751_000_000_000,
       },
     ],

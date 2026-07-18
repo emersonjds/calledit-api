@@ -3,22 +3,28 @@ import { buildApp } from '../src/app.js';
 import { predictionSchema } from '../src/schemas/index.js';
 import type { Db } from '../src/db/types.js';
 
+function stringParam(params: unknown[] | undefined, index: number): string {
+  const value = params?.[index];
+  if (typeof value !== 'string') throw new Error(`expected string param at index ${index}`);
+  return value;
+}
+
 function makeApp() {
-  const store: Record<string, unknown>[] = [];
+  const store: { id: string; address: string }[] = [];
   const db: Db = {
     query: async (text: string, params?: unknown[]) => {
       if (text.startsWith('insert into predictions')) {
-        store.push({ id: params![0], address: params![1] });
+        store.push({ id: stringParam(params, 0), address: stringParam(params, 1) });
         return { rows: [] };
       }
       if (text.includes('where id = $1')) {
-        const row = store.find((r) => r.id === params![0]);
-        return { rows: row ? [fullRow(row.id as string, row.address as string)] : [] };
+        const id = stringParam(params, 0);
+        const row = store.find((r) => r.id === id);
+        return { rows: row ? [fullRow(row.id, row.address)] : [] };
       }
       if (text.includes('where address = $1')) {
-        const rows = store
-          .filter((r) => r.address === params![0])
-          .map((r) => fullRow(r.id as string, r.address as string));
+        const address = stringParam(params, 0);
+        const rows = store.filter((r) => r.address === address).map((r) => fullRow(r.id, r.address));
         return { rows };
       }
       return { rows: [] };
