@@ -2,16 +2,12 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import {
-  fixturesSchema,
   leaderboardSchema,
   profileSchema,
   walletAccountSchema,
   walletOverviewSchema,
 } from '../schemas/index.js';
 import type { WalletAccount, WalletOverview } from '../schemas/index.js';
-
-const BRA = { code: 'BRA', name: 'Brazil', flag: '🇧🇷' };
-const ARG = { code: 'ARG', name: 'Argentina', flag: '🇦🇷' };
 
 export async function stubRoutes(app: FastifyInstance): Promise<void> {
   const r = app.withTypeProvider<ZodTypeProvider>();
@@ -74,30 +70,6 @@ export async function stubRoutes(app: FastifyInstance): Promise<void> {
       entries: [
         { rank: 1, handle: 'goalgod', accuracy: 0.81, streak: 6, calls: 40, you: false },
         { rank: 7, handle: 'stubcaller', accuracy: 0.62, streak: 2, calls: 21, you: true },
-      ],
-    }),
-  );
-
-  r.get(
-    '/api/fixtures/upcoming',
-    {
-      schema: {
-        tags: ['fixtures'],
-        summary: 'List upcoming fixtures',
-        description: 'Returns World Cup fixtures. Stubbed pending real TxLINE data.',
-        response: { 200: fixturesSchema },
-      },
-    },
-    async () => ({
-      items: [
-        {
-          id: 'm1',
-          home: BRA,
-          away: ARG,
-          kickoff: 1_752_000_000_000,
-          stage: 'Group A',
-          venue: 'MetLife',
-        },
       ],
     }),
   );

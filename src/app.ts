@@ -10,6 +10,7 @@ import {
 } from 'fastify-type-provider-zod';
 import type { Db } from './db/types.js';
 import { feedRoutes } from './routes/feed.js';
+import { fixturesRoutes } from './routes/fixtures.js';
 import { healthRoutes } from './routes/health.js';
 import { predictionRoutes } from './routes/predictions.js';
 import { stubRoutes } from './routes/stubs.js';
@@ -63,6 +64,7 @@ export function buildApp(opts: AppOptions): FastifyInstance {
   app.register(healthRoutes);
   app.register(predictionRoutes);
   app.register(feedRoutes);
+  app.register(fixturesRoutes);
   app.register(stubRoutes);
   return app;
 }
