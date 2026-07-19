@@ -59,7 +59,7 @@ export function buildApp(opts: AppOptions): FastifyInstance {
     transform: jsonSchemaTransform,
   });
   app.register(swaggerUi, {
-    routePrefix: '/docs',
+    routePrefix: '/swagger',
     theme: {
       // Hide the Swagger/Fastify topbar logo — clean docs header.
       css: [{ filename: 'theme.css', content: '.swagger-ui .topbar { display: none }' }],
