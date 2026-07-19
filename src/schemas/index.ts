@@ -47,6 +47,7 @@ export const settlementSchema = z.object({
   payoutSol: z.number(),
   calledSecondsBefore: z.number(),
   resolvedEvent: matchEventSchema.nullable(),
+  verifiedOnChain: z.boolean().optional(),
 });
 
 export const predictionSchema = z.object({

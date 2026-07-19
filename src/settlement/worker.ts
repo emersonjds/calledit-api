@@ -1,6 +1,9 @@
 import type { Db } from '../db/types.js';
 import type { Market } from '../schemas/index.js';
 import { normalizeScoreEvent } from '../txline/normalize.js';
+import { fetchStatProof } from '../txline/proof.js';
+import { verifyStat } from '../onchain/verifier.js';
+import { settlementKeys } from './keys.js';
 import { resolvePrediction, type ScoreFeedEvent, type SettleablePrediction } from './settle.js';
 
 interface ResolvingRow {
@@ -32,6 +35,29 @@ async function loadScoreEvents(db: Db, matchId: string): Promise<ScoreFeedEvent[
   return events;
 }
 
+// The settled feed event's `seq` isn't carried by `ScoreFeedEvent` (only `id`), so it's
+// looked up from `proofId` (a feed_events.id) rather than threaded through resolvePrediction.
+// Period isn't tracked per-prediction (resolvePrediction sums cumulative totals regardless of
+// period), so 'FT' (prefix 0) is used as the closest match to that period-agnostic semantics.
+async function fetchOnChainVerdict(
+  db: Db,
+  matchId: string,
+  market: Market,
+  proofId: string,
+): Promise<boolean | undefined> {
+  if (proofId === 'none') return undefined;
+  const fixtureId = Number(matchId);
+  if (Number.isNaN(fixtureId)) return undefined;
+  const { rows } = await db.query<{ seq: number }>(`select seq from feed_events where id = $1`, [proofId]);
+  const seq = rows[0]?.seq;
+  if (seq === undefined) return undefined;
+  const statKey = settlementKeys(market, 'FT').join(',');
+  if (!statKey) return undefined;
+  const proof = await fetchStatProof(fixtureId, seq, statKey);
+  const chain = await verifyStat(proof, { threshold: 0, comparison: 'GreaterThan' });
+  return chain.ok;
+}
+
 async function settleOne(db: Db, row: ResolvingRow, events: ScoreFeedEvent[], now: number): Promise<void> {
   const prediction: SettleablePrediction = {
     market: row.market,
@@ -42,6 +68,15 @@ async function settleOne(db: Db, row: ResolvingRow, events: ScoreFeedEvent[], no
   };
   const outcome = resolvePrediction(prediction, events, now);
   if (outcome === null) return;
+
+  // Never blocks off-chain settlement: a proof/network failure just leaves
+  // `verifiedOnChain` unset and the off-chain predicate stays the source of truth.
+  try {
+    const verified = await fetchOnChainVerdict(db, row.match_id, row.market, outcome.settlement.proofId);
+    if (verified !== undefined) outcome.settlement.verifiedOnChain = verified;
+  } catch (err) {
+    console.warn('on-chain verify skipped:', err instanceof Error ? err.message : err);
+  }
 
   // `where status = 'resolving'` is the idempotency guard: a prediction settled by
   // an earlier tick (or a concurrent run) is never re-settled or paid twice.
