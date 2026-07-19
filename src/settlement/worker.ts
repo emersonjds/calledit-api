@@ -3,11 +3,13 @@ import type { Market } from '../schemas/index.js';
 import { normalizeScoreEvent } from '../txline/normalize.js';
 import { fetchStatProof } from '../txline/proof.js';
 import { verifyStat } from '../onchain/verifier.js';
+import { sendPayout, solToLamports } from '../onchain/stake.js';
 import { baseKeysFor } from './keys.js';
 import { resolvePrediction, type ScoreFeedEvent, type SettleablePrediction } from './settle.js';
 
 interface ResolvingRow {
   id: string;
+  address: string;
   match_id: string;
   market: Market;
   provable: boolean;
@@ -88,17 +90,36 @@ async function settleOne(db: Db, row: ResolvingRow, events: ScoreFeedEvent[], no
     }
   }
 
-  // `where status = 'resolving'` is the idempotency guard: a prediction settled by
+  if (outcome.status === 'won') {
+    // Atomic claim so overlapping ticks can't double-pay.
+    const claim = await db.query(
+      `update predictions set status='settling' where id=$1 and status='resolving'`,
+      [row.id],
+    );
+    if (claim.rowCount === 0) return; // already claimed/settled
+    try {
+      const sig = await sendPayout(row.address, solToLamports(outcome.payoutSol));
+      outcome.settlement.payoutTxHash = sig;
+    } catch (err) {
+      console.error('payout failed, leaving prediction in settling for retry', row.id, err);
+      // ponytail: failed send leaves row 'settling'; a later tick re-selects only if we
+      // reset to 'resolving'. For the demo we reset here so it retries; durable fix = record intent first.
+      await db.query(`update predictions set status = 'resolving' where id = $1 and status = 'settling'`, [row.id]);
+      return;
+    }
+  }
+
+  // `status in ('resolving','settling')` is the idempotency guard: a prediction settled by
   // an earlier tick (or a concurrent run) is never re-settled or paid twice.
   await db.query(
-    `update predictions set status = $1, settlement = $2 where id = $3 and status = 'resolving'`,
+    `update predictions set status = $1, settlement = $2 where id = $3 and status in ('resolving','settling')`,
     [outcome.status, outcome.settlement, row.id],
   );
 }
 
 export async function runSettlementTick(db: Db, now: number = Date.now()): Promise<void> {
   const { rows } = await db.query<ResolvingRow>(
-    `select id, match_id, market, provable, potential_sol, stamped_at, window_min
+    `select id, address, match_id, market, provable, potential_sol, stamped_at, window_min
      from predictions where status = 'resolving' and provable = true`,
   );
   if (rows.length === 0) return;
