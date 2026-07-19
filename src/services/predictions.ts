@@ -2,7 +2,21 @@ import { randomUUID } from 'node:crypto';
 import type { Db } from '../db/types.js';
 import type { CommitPredictionInput, Prediction } from '../schemas/index.js';
 import { isProvable, multiplierFor, payout } from './markets.js';
+import { getFixtureKickoff } from './fixtures.js';
 import { verifyStakeTransfer, solToLamports } from '../onchain/stake.js';
+
+// The raw TxLINE feed has no match-clock minute, so the "called at" minute is
+// derived from the fixture kickoff and the on-chain stamp time. Cosmetic — a
+// failure here must never block a commit, so it always falls back to 0.
+async function matchMinuteAt(matchId: string, stampedAt: number): Promise<number> {
+  try {
+    const kickoff = await getFixtureKickoff(matchId);
+    if (kickoff && stampedAt > kickoff) return Math.floor((stampedAt - kickoff) / 60_000);
+  } catch {
+    // ignore — clock is display-only
+  }
+  return 0;
+}
 
 interface PredictionRow {
   id: string;
@@ -49,7 +63,6 @@ export async function createPrediction(db: Db, input: CommitPredictionInput): Pr
   const provable = isProvable(input.market);
   const multiplier = multiplierFor(input.market);
   const potentialSol = payout(input.stakeSol, multiplier);
-  const atClockMin = 0;
   const windowMin = 5;
 
   const stakeLamports = solToLamports(input.stakeSol);
@@ -60,6 +73,7 @@ export async function createPrediction(db: Db, input: CommitPredictionInput): Pr
     throw err;
   }
   const stampedAt = stake.blockTime ? stake.blockTime * 1000 : Date.now();
+  const atClockMin = await matchMinuteAt(input.matchId, stampedAt);
   const seq = 1;
   const epochDay = Math.floor(stampedAt / 86_400_000);
   const txHash = input.stakeTxSig;

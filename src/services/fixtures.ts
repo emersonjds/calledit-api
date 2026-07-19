@@ -85,3 +85,14 @@ export async function getFixtureTeams(
   const fixture = items.find((item) => item.id === fixtureId);
   return fixture ? { home: fixture.home, away: fixture.away } : null;
 }
+
+/**
+ * Kickoff (epoch ms) for a fixture, from the same cached snapshot. The raw feed
+ * carries no match-clock minute, so kickoff + wall-clock is the only source of a
+ * real match minute. Null if unknown/unreachable — callers must fall back, never throw.
+ */
+export async function getFixtureKickoff(fixtureId: string): Promise<number | null> {
+  const items = await cachedFixtures();
+  const fixture = items.find((item) => item.id === fixtureId);
+  return fixture ? fixture.kickoff : null;
+}
