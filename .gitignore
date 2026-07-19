@@ -23,7 +23,11 @@ coverage/
 .vscode/
 .idea/
 
+# generated docs (regenerated from the .html source)
+*.pdf
+
 # AI tooling — never commit local/session state
 .claude/settings.local.json
 .serena/
 .superpowers/
+.devnet/
