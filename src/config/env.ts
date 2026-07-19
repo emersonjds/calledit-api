@@ -4,6 +4,11 @@ const envSchema = z.object({
   NODE_ENV: z.string().default('development'),
   PORT: z.coerce.number().default(3000),
   DATABASE_URL: z.string().min(1),
+  // Comma-separated allow-list of front origins; unset = allow any origin.
+  CORS_ORIGINS: z
+    .string()
+    .optional()
+    .transform((v) => v?.split(',').map((s) => s.trim()).filter(Boolean)),
   // Optional in milestone 1 — used by the feed ingester and settlement later.
   NETWORK: z.enum(['mainnet', 'devnet']).optional(),
   SOLANA_RPC_URL: z.string().optional(),

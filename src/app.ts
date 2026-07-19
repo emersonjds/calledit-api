@@ -23,6 +23,7 @@ declare module 'fastify' {
 
 export interface AppOptions {
   db: Db;
+  corsOrigins?: string[];
 }
 
 export function buildApp(opts: AppOptions): FastifyInstance {
@@ -30,7 +31,11 @@ export function buildApp(opts: AppOptions): FastifyInstance {
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
   app.decorate('db', opts.db);
-  app.register(cors, { origin: true });
+  // Allow-list the front's domains via CORS_ORIGINS; unset = open to any origin.
+  app.register(cors, {
+    origin: opts.corsOrigins?.length ? opts.corsOrigins : true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  });
 
   app.register(swagger, {
     openapi: {

@@ -142,3 +142,4 @@ export type LeaderboardDto = z.infer<typeof leaderboardSchema>;
 export type WalletAccount = z.infer<typeof walletAccountSchema>;
 export type WalletOverview = z.infer<typeof walletOverviewSchema>;
 export type Fixture = z.infer<typeof fixtureSchema>;
+export type Settlement = z.infer<typeof settlementSchema>;

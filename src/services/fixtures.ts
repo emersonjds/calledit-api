@@ -57,3 +57,31 @@ export async function getUpcomingFixtures(): Promise<Fixture[]> {
   }
   return raw.map(toFixture);
 }
+
+// ponytail: module-level cache, one process — the feed route would otherwise
+// re-fetch the whole TxLINE fixtures snapshot on every poll. Upgrade to a
+// shared cache (Redis) only if this runs across multiple instances.
+let fixturesCache: { items: Fixture[]; fetchedAt: number } | null = null;
+const FIXTURES_CACHE_TTL_MS = 60_000;
+
+async function cachedFixtures(): Promise<Fixture[]> {
+  if (fixturesCache && Date.now() - fixturesCache.fetchedAt < FIXTURES_CACHE_TTL_MS) {
+    return fixturesCache.items;
+  }
+  const items = await getUpcomingFixtures();
+  fixturesCache = { items, fetchedAt: Date.now() };
+  return items;
+}
+
+/**
+ * Home/away team metadata for a TxLINE fixture id, from the same cached
+ * snapshot `/api/fixtures/upcoming` uses. Null if the fixture isn't found or
+ * TxLINE is unreachable — callers should fall back to a placeholder, never throw.
+ */
+export async function getFixtureTeams(
+  fixtureId: string,
+): Promise<{ home: TeamInfo; away: TeamInfo } | null> {
+  const items = await cachedFixtures();
+  const fixture = items.find((item) => item.id === fixtureId);
+  return fixture ? { home: fixture.home, away: fixture.away } : null;
+}
