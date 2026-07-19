@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { AnchorProvider, Program, type Idl } from '@coral-xyz/anchor';
+// CommonJS module: named ESM imports fail to boot under node 22 (Railway).
+import anchorPkg from '@coral-xyz/anchor';
+import type { Idl } from '@coral-xyz/anchor';
+const { AnchorProvider, Program } = anchorPkg;
+type Program = InstanceType<typeof Program>;
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 
 const here = dirname(fileURLToPath(import.meta.url));

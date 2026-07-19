@@ -1,4 +1,8 @@
-import { BN } from '@coral-xyz/anchor';
+// @coral-xyz/anchor is CommonJS: a named `import { BN }` fails to boot under
+// Node's ESM loader (Railway pins node 22). Import the default and destructure.
+import anchorPkg from '@coral-xyz/anchor';
+const { BN } = anchorPkg;
+type BN = InstanceType<typeof BN>;
 import type { ScoresStatValidationV3, ProofNodeJson, StatLeafJson } from '../txline/proof.js';
 
 export interface Predicate {
