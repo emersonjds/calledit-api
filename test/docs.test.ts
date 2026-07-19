@@ -16,10 +16,10 @@ interface OpenApiDoc {
 }
 
 describe('swagger', () => {
-  it('serves an OpenAPI document at /docs/json', async () => {
+  it('serves an OpenAPI document at /swagger/json', async () => {
     const app = buildApp({ db: fakeDb });
     await app.ready();
-    const res = await app.inject({ method: 'GET', url: '/docs/json' });
+    const res = await app.inject({ method: 'GET', url: '/swagger/json' });
     expect(res.statusCode).toBe(200);
     const doc: OpenApiDoc = res.json();
     expect(doc.openapi).toMatch(/^3\./);
@@ -31,7 +31,7 @@ describe('swagger', () => {
   it('documents every route with a summary and at least one tag', async () => {
     const app = buildApp({ db: fakeDb });
     await app.ready();
-    const res = await app.inject({ method: 'GET', url: '/docs/json' });
+    const res = await app.inject({ method: 'GET', url: '/swagger/json' });
     const doc: OpenApiDoc = res.json();
     const paths = doc.paths ?? {};
     const undocumented: string[] = [];
