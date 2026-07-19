@@ -16,5 +16,22 @@ services:
       timeout: 3s
       retries: 5
 
+  api:
+    build: .
+    container_name: calledit-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgres://calledit:calledit@postgres:5432/calledit
+      # Live TxLINE feed + Solana settlement are optional for a local boot.
+      # To enable them, drop the vars into a .env file and uncomment env_file below.
+    # env_file:
+    #   - .env
+    ports:
+      - '3000:3000'
+
 volumes:
   calledit-pgdata:
