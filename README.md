@@ -1,6 +1,11 @@
 # Called It — World Cup 2026 Prediction Backend
 
-**Live, on-chain-verified FIFA World Cup 2026 predictions on Solana.** Users commit predictions before events, stake real devnet SOL, and settlement is determined by provable stats from the TxLINE feed. Built with Fastify 5, TypeScript, Postgres, and Solana web3.js.
+**Live, on-chain-verified FIFA World Cup 2026 predictions on Solana.** Users commit predictions before events, stake real devnet SOL, and settlement is determined by provable stats from the TxLINE feed.
+
+[![Solana devnet](https://img.shields.io/badge/Solana-devnet-14F195?style=flat-square&logo=solana)](https://solscan.io/?cluster=devnet)
+[![Fastify 5](https://img.shields.io/badge/Fastify-5-000000?style=flat-square&logo=fastify)](https://fastify.io)
+[![Railway](https://img.shields.io/badge/Deployed-Railway-0B0D0E?style=flat-square&logo=railway)](https://railway.app)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
 
 ## Quick Start
 
@@ -115,9 +120,6 @@ pnpm type-check
 pnpm lint:fix
 pnpm format
 
-# Test (Vitest, 70 tests)
-pnpm test
-
 # Build for production
 pnpm build
 
@@ -130,20 +132,7 @@ pnpm migrate
 
 ## Deploy to Railway
 
-The service deploys from GitHub — **a push to `master` auto-builds and redeploys**.
-
-**Config** (Railway service settings):
-- Build: `pnpm install && pnpm build`
-- Start: `pnpm migrate && pnpm start` (Node 22)
-- Health check path: `/health`
-- Postgres plugin provides `DATABASE_URL`
-
-**Setup:**
-1. New Project → Deploy from GitHub → this repo; add the Postgres plugin.
-2. Set the env vars from the table above (`CORS_ORIGINS`, `NETWORK`, `SOLANA_RPC_URL`, `TXORACLE_PROGRAM_ID`, `TXL_TOKEN_MINT`, `TXLINE_*`, `SERVICE_WALLET_SECRET`). Env changes only take effect on a fresh deploy.
-3. On boot the service runs the migration, starts the settlement worker, and — when TxLINE vars are present — the live feed ingester.
-
-> `render.yaml` in the repo is a stale Render blueprint, not used by Railway.
+Deployed on **Railway** — a push to `master` auto-deploys. Live API: **https://calledit-api-production.up.railway.app** (Swagger at `/swagger`).
 
 ## Key Details
 
@@ -151,10 +140,4 @@ The service deploys from GitHub — **a push to `master` auto-builds and redeplo
 
 **Provable markets:** `goal`, `card`, and `corner` — each backed by TxLINE Merkle-provable stat keys. `foul` is stub-only.
 
-**Testing:** Vitest runs 70 tests (pure logic, feed projector, SSE parsing, on-chain arg building, settlement predicate, and contract tests via `fastify.inject`). Every route is tested against the same Zod schemas used by the frontend.
-
 **Timestamps:** All times are UTC ISO 8601. Stake/payout amounts are integer base units (lamports/USDC decimals) unless explicitly noted.
-
----
-
-Design docs: [`docs/superpowers/specs/`](docs/superpowers/specs/) · Devnet setup: [`docs/devnet-setup-guide.html`](docs/devnet-setup-guide.html) · Milestones: [`docs/superpowers/plans/`](docs/superpowers/plans/)
