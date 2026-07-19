@@ -64,28 +64,40 @@ export async function createPrediction(db: Db, input: CommitPredictionInput): Pr
   const epochDay = Math.floor(stampedAt / 86_400_000);
   const txHash = input.stakeTxSig;
 
-  await db.query(
-    `insert into predictions
-       (id, address, match_id, market, provable, stake_sol, multiplier, potential_sol,
-        at_clock_min, window_min, status, tx_hash, stamped_at, seq, epoch_day)
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'resolving',$11,$12,$13,$14)`,
-    [
-      id,
-      input.address,
-      input.matchId,
-      input.market,
-      provable,
-      input.stakeSol,
-      multiplier,
-      potentialSol,
-      atClockMin,
-      windowMin,
-      txHash,
-      stampedAt,
-      seq,
-      epochDay,
-    ],
-  );
+  try {
+    await db.query(
+      `insert into predictions
+         (id, address, match_id, market, provable, stake_sol, multiplier, potential_sol,
+          at_clock_min, window_min, status, tx_hash, stamped_at, seq, epoch_day)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'resolving',$11,$12,$13,$14)`,
+      [
+        id,
+        input.address,
+        input.matchId,
+        input.market,
+        provable,
+        input.stakeSol,
+        multiplier,
+        potentialSol,
+        atClockMin,
+        windowMin,
+        txHash,
+        stampedAt,
+        seq,
+        epochDay,
+      ],
+    );
+  } catch (e) {
+    // 23505 = postgres unique_violation. The `predictions_tx_hash_unique` index is the real
+    // guard against stake-signature replay (a pre-insert select would be racy under
+    // concurrent posts) — this just maps the DB rejection to the same 400 path.
+    if ((e as { code?: string }).code === '23505') {
+      const err = new Error('stake transfer already used');
+      (err as Error & { statusCode?: number }).statusCode = 400;
+      throw err;
+    }
+    throw e;
+  }
 
   return {
     id,

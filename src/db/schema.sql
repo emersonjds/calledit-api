@@ -30,3 +30,4 @@ create table if not exists predictions (
 );
 create index if not exists predictions_address on predictions (address);
 create index if not exists predictions_match on predictions (match_id);
+create unique index if not exists predictions_tx_hash_unique on predictions (tx_hash);
