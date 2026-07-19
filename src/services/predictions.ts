@@ -63,7 +63,9 @@ export async function createPrediction(db: Db, input: CommitPredictionInput): Pr
   const provable = isProvable(input.market);
   const multiplier = multiplierFor(input.market);
   const potentialSol = payout(input.stakeSol, multiplier);
-  const windowMin = 3;
+  // Per-market window: goals are rare so give 2 min; frequent markets (corner/card)
+  // settle in 1 min for a tighter, minute-by-minute live feel. foul never settles.
+  const windowMin = input.market === 'goal' ? 2 : 1;
 
   const stakeLamports = solToLamports(input.stakeSol);
   const stake = await verifyStakeTransfer(input.stakeTxSig, input.address, stakeLamports);
