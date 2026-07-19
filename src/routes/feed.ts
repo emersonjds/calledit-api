@@ -3,8 +3,10 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { matchSnapshotSchema, type TeamInfo } from '../schemas/index.js';
 import { getFeedSnapshot } from '../services/feed.js';
+import { getFixtureTeams } from '../services/fixtures.js';
 
-// ponytail: placeholder pair until fixtures metadata lands (same stub teams milestone 1 used).
+// Fallback only — used when the fixture isn't in the TxLINE snapshot yet
+// (e.g. TxLINE unreachable, or matchId doesn't match any known fixture).
 const DEFAULT_TEAMS: { home: TeamInfo; away: TeamInfo } = {
   home: { code: 'BRA', name: 'Brazil', flag: '🇧🇷' },
   away: { code: 'ARG', name: 'Argentina', flag: '🇦🇷' },
@@ -25,6 +27,9 @@ export async function feedRoutes(app: FastifyInstance): Promise<void> {
         response: { 200: matchSnapshotSchema },
       },
     },
-    async (req) => getFeedSnapshot(app.db, req.params.matchId, DEFAULT_TEAMS),
+    async (req) => {
+      const teams = (await getFixtureTeams(req.params.matchId).catch(() => null)) ?? DEFAULT_TEAMS;
+      return getFeedSnapshot(app.db, req.params.matchId, teams);
+    },
   );
 }

@@ -3,16 +3,22 @@ import { Pool } from 'pg';
 import { buildApp } from './app.js';
 import { loadEnv } from './config/env.js';
 import { startIngester } from './ingester/index.js';
+import { startSettlementWorker } from './settlement/worker.js';
 
 const env = loadEnv();
 const pool = new Pool({ connectionString: env.DATABASE_URL });
-const app = buildApp({ db: pool });
+const publicUrl =
+  env.PUBLIC_URL ??
+  (env.RAILWAY_PUBLIC_DOMAIN ? `https://${env.RAILWAY_PUBLIC_DOMAIN}` : undefined);
+const app = buildApp({ db: pool, corsOrigins: env.CORS_ORIGINS, publicUrl });
 
 app
   .listen({ port: env.PORT, host: '0.0.0.0' })
   .then((address) => {
     console.log(`calledit-api listening on ${address}`);
     startIngesterIfConfigured();
+    startSettlementWorker(pool);
+    console.log('settlement worker started');
   })
   .catch((error) => {
     console.error(error);

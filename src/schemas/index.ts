@@ -47,6 +47,8 @@ export const settlementSchema = z.object({
   payoutSol: z.number(),
   calledSecondsBefore: z.number(),
   resolvedEvent: matchEventSchema.nullable(),
+  verifiedOnChain: z.boolean().optional(),
+  payoutTxHash: z.string().optional(),
 });
 
 export const predictionSchema = z.object({
@@ -124,11 +126,17 @@ export const leaderboardSchema = z.object({
 
 export const marketSchema = z.enum(['corner', 'card', 'goal', 'foul']);
 
+// Base58, 32-44 chars — a Solana pubkey shape. Guards the payout destination at the trust
+// boundary: a malformed address here would otherwise only fail later, inside sendPayout's
+// `new PublicKey(to)` at settlement time, stuck retrying forever.
+const solanaAddressSchema = z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/, 'invalid solana address');
+
 export const commitPredictionSchema = z.object({
   matchId: z.string(),
   market: marketSchema,
   stakeSol: z.number().positive(),
-  address: z.string(),
+  address: solanaAddressSchema,
+  stakeTxSig: z.string().min(1),
 });
 
 export type TeamInfo = z.infer<typeof teamInfoSchema>;
@@ -142,3 +150,4 @@ export type LeaderboardDto = z.infer<typeof leaderboardSchema>;
 export type WalletAccount = z.infer<typeof walletAccountSchema>;
 export type WalletOverview = z.infer<typeof walletOverviewSchema>;
 export type Fixture = z.infer<typeof fixtureSchema>;
+export type Settlement = z.infer<typeof settlementSchema>;
