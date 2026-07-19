@@ -1,15 +1,14 @@
+<div align="center">
+
 # calledit-api
 
-![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Node](https://img.shields.io/badge/Node-20%2B-339933?style=for-the-badge&logo=node.js&logoColor=white)
-![Fastify](https://img.shields.io/badge/Fastify-5-000000?style=for-the-badge&logo=fastify&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![Solana](https://img.shields.io/badge/Solana-devnet-14F195?style=for-the-badge&logo=solana&logoColor=black)
-![Anchor](https://img.shields.io/badge/Anchor-0.32-663399?style=for-the-badge)
-![Zod](https://img.shields.io/badge/Zod-validated-3E67B1?style=for-the-badge)
-![Vitest](https://img.shields.io/badge/Vitest-43%20passing-brightgreen?style=for-the-badge&logo=vitest&logoColor=white)
-![Track](https://img.shields.io/badge/Superteam%20%C3%97%20TxODDS-World%20Cup-B6FF3C?style=for-the-badge)
-![Status](https://img.shields.io/badge/status-devnet%20live-success?style=for-the-badge)
+**Live, on-chain-verified World Cup 2026 prediction backend — real feed, real chain, real Postgres.**
+
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white&labelColor=0B0F14) ![Node](https://img.shields.io/badge/Node-20%2B-339933?style=for-the-badge&logo=nodedotjs&logoColor=white&labelColor=0B0F14) ![Fastify](https://img.shields.io/badge/Fastify-5-202020?style=for-the-badge&logo=fastify&logoColor=white&labelColor=0B0F14) ![PostgreSQL](https://img.shields.io/badge/Postgres-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white&labelColor=0B0F14) ![Solana](https://img.shields.io/badge/Solana-devnet-9945FF?style=for-the-badge&logo=solana&logoColor=white&labelColor=0B0F14) ![Anchor](https://img.shields.io/badge/Anchor-0.32-C44BFF?style=for-the-badge&labelColor=0B0F14) ![Zod](https://img.shields.io/badge/Zod-validated-3E67B1?style=for-the-badge&logo=zod&logoColor=white&labelColor=0B0F14) ![Vitest](https://img.shields.io/badge/Vitest-43%20passing-6E9F18?style=for-the-badge&logo=vitest&logoColor=white&labelColor=0B0F14)
+
+![Track](https://img.shields.io/badge/Superteam%20%C3%97%20TxODDS-World%20Cup-B6FF3C?style=for-the-badge&labelColor=0B0F14&logo=solana&logoColor=B6FF3C) ![Status](https://img.shields.io/badge/status-devnet%20live-B6FF3C?style=for-the-badge&labelColor=0B0F14)
+
+</div>
 
 Backend for **Called It** — a live, on-chain-verified World Cup 2026 prediction game on Solana. You
 commit a prediction *before* the event; this service stamps it, ingests the real TxODDS **TxLINE**
