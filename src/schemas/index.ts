@@ -126,11 +126,16 @@ export const leaderboardSchema = z.object({
 
 export const marketSchema = z.enum(['corner', 'card', 'goal', 'foul']);
 
+// Base58, 32-44 chars — a Solana pubkey shape. Guards the payout destination at the trust
+// boundary: a malformed address here would otherwise only fail later, inside sendPayout's
+// `new PublicKey(to)` at settlement time, stuck retrying forever.
+const solanaAddressSchema = z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/, 'invalid solana address');
+
 export const commitPredictionSchema = z.object({
   matchId: z.string(),
   market: marketSchema,
   stakeSol: z.number().positive(),
-  address: z.string(),
+  address: solanaAddressSchema,
   stakeTxSig: z.string().min(1),
 });
 
