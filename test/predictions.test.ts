@@ -1,7 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { buildApp } from '../src/app.js';
 import { predictionSchema } from '../src/schemas/index.js';
 import type { Db } from '../src/db/types.js';
+
+vi.mock('../src/onchain/stake.js', () => ({
+  verifyStakeTransfer: vi.fn(async () => ({ ok: true, blockTime: 1_700_000_000 })),
+  solToLamports: (sol: number) => Math.round(sol * 1_000_000_000),
+}));
 
 function stringParam(params: unknown[] | undefined, index: number): string {
   const value = params?.[index];
@@ -60,7 +65,7 @@ describe('predictions routes', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/predictions',
-      payload: { matchId: 'm1', market: 'goal', stakeSol: 0.5, address: 'alice' },
+      payload: { matchId: 'm1', market: 'goal', stakeSol: 0.5, address: 'alice', stakeTxSig: 'sig-1' },
     });
     expect(res.statusCode).toBe(200);
     expect(() => predictionSchema.parse(res.json())).not.toThrow();
@@ -80,7 +85,7 @@ describe('predictions routes', () => {
     await app.inject({
       method: 'POST',
       url: '/api/predictions',
-      payload: { matchId: 'm1', market: 'goal', stakeSol: 0.5, address: 'alice' },
+      payload: { matchId: 'm1', market: 'goal', stakeSol: 0.5, address: 'alice', stakeTxSig: 'sig-1' },
     });
     const res = await app.inject({ method: 'GET', url: '/api/predictions?address=alice' });
     expect(res.statusCode).toBe(200);
