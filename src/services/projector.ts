@@ -2,21 +2,12 @@ import { matchSnapshotSchema, type Market, type MatchEvent, type MatchSnapshot, 
 import type { NormalizedOddsEvent, NormalizedScoreEvent, ScoreCumulative } from '../txline/types.js';
 import { multiplierFor } from './markets.js';
 
-// Provable markets, in display order — used when the odds feed has no usable market list
-// (real TxLINE odds frames carry bookmaker lines like over/under, not our goal/card/corner
-// keys) so the board still shows bettable markets.
 const DEFAULT_MARKETS: Market[] = ['goal', 'card', 'corner'];
 
 function defaultMarkets(): { market: string; multiplier: number }[] {
   return DEFAULT_MARKETS.map((market) => ({ market, multiplier: multiplierFor(market) }));
 }
 
-// verify against live sample: mapping from TxLINE's raw `gameState` strings to our period
-// enum is a best guess until we see real values; unknown states default to '1H'.
-// RISK: live-sniffed /api/fixtures/snapshot shows `GameState` as a NUMBER (e.g. 1), not
-// a string like '1H' — if the score stream's per-frame `gameState` is numeric too, every
-// frame falls through to the '1H' default here. Confirm against a live score frame
-// before relying on period in the UI; does not affect settlement (settle.ts ignores period).
 const PERIOD_MAP: Record<string, MatchSnapshot['period']> = {
   '1H': '1H',
   HT: 'HT',
@@ -87,8 +78,6 @@ export function projectSnapshot(
     pct: latestOdds?.pct ?? { home: 0, draw: 0, away: 0 },
     events: diffScoreEvents(sortedScores),
     markets: latestOdds?.markets.length ? latestOdds.markets : defaultMarkets(),
-    // Odds ingestion is unreliable/absent-by-design (no Seq, per-market frames) — the scores
-    // stream's real match clock is the source of truth for live, not odds' `InRunning`.
     live: latestScore?.clockRunning === true || latestScore?.statusId === 2,
   };
 

@@ -5,15 +5,12 @@ import { isProvable, multiplierFor, payout } from './markets.js';
 import { getFixtureKickoff } from './fixtures.js';
 import { verifyStakeTransfer, solToLamports } from '../onchain/stake.js';
 
-// The raw TxLINE feed has no match-clock minute, so the "called at" minute is
-// derived from the fixture kickoff and the on-chain stamp time. Cosmetic — a
-// failure here must never block a commit, so it always falls back to 0.
 async function matchMinuteAt(matchId: string, stampedAt: number): Promise<number> {
   try {
     const kickoff = await getFixtureKickoff(matchId);
     if (kickoff && stampedAt > kickoff) return Math.floor((stampedAt - kickoff) / 60_000);
   } catch {
-    // ignore — clock is display-only
+    /* empty */
   }
   return 0;
 }
@@ -63,8 +60,6 @@ export async function createPrediction(db: Db, input: CommitPredictionInput): Pr
   const provable = isProvable(input.market);
   const multiplier = multiplierFor(input.market);
   const potentialSol = payout(input.stakeSol, multiplier);
-  // Per-market window: goals are rare so give 2 min; frequent markets (corner/card)
-  // settle in 1 min for a tighter, minute-by-minute live feel. foul never settles.
   const windowMin = input.market === 'goal' ? 2 : 1;
 
   const stakeLamports = solToLamports(input.stakeSol);
@@ -104,9 +99,6 @@ export async function createPrediction(db: Db, input: CommitPredictionInput): Pr
       ],
     );
   } catch (e) {
-    // 23505 = postgres unique_violation. The `predictions_tx_hash_unique` index is the real
-    // guard against stake-signature replay (a pre-insert select would be racy under
-    // concurrent posts) — this just maps the DB rejection to the same 400 path.
     if ((e as { code?: string }).code === '23505') {
       const err = new Error('stake transfer already used');
       (err as Error & { statusCode?: number }).statusCode = 400;

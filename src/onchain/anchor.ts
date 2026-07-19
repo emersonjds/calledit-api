@@ -21,7 +21,6 @@ export function getConnection(): Connection {
   return new Connection(requireEnv('SOLANA_RPC_URL'), 'confirmed');
 }
 
-// Read-only provider: .view() simulates, so a throwaway keypair as the wallet is fine.
 export function getTxoracle(): Program {
   const connection = getConnection();
   const wallet = {

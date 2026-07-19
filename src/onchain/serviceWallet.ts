@@ -9,9 +9,6 @@ function requireEnv(name: string): string {
 
 let cached: Keypair | undefined;
 
-// SERVICE_WALLET_SECRET is either a Solana CLI JSON keyfile *path*, or the JSON
-// array itself inline (starts with '['). The inline form lets hosts like Railway
-// hold the key as an env var without shipping the gitignored keyfile.
 export function loadServiceKeypair(): Keypair {
   if (cached) return cached;
   const value = requireEnv('SERVICE_WALLET_SECRET').trim();

@@ -13,7 +13,6 @@ const rawFixture = {
   Participant1IsHome: true,
 };
 
-// live TxLINE omits GameState on some unscheduled fixtures — must still parse.
 const rawFixtureWithoutGameState = {
   FixtureId: 102,
   Participant1: 'Brazil',

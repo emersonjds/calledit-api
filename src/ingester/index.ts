@@ -14,9 +14,6 @@ export interface Ingester {
   stop: () => void;
 }
 
-// Shared across both streams: seeded with `seed` once, then re-fetches a
-// fresh jwt on every subsequent call (client.ts calls it again only after a
-// 401, so this never over-fetches in the happy path).
 function createJwtHolder(origin: string, seed: string | undefined): () => Promise<string> {
   let seedToken: string | null = seed ?? null;
   return async function getJwt(): Promise<string> {

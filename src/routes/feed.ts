@@ -5,8 +5,6 @@ import { matchSnapshotSchema, type TeamInfo } from '../schemas/index.js';
 import { getFeedSnapshot } from '../services/feed.js';
 import { getFixtureTeams } from '../services/fixtures.js';
 
-// Fallback only — used when the fixture isn't in the TxLINE snapshot yet
-// (e.g. TxLINE unreachable, or matchId doesn't match any known fixture).
 const DEFAULT_TEAMS: { home: TeamInfo; away: TeamInfo } = {
   home: { code: 'BRA', name: 'Brazil', flag: '🇧🇷' },
   away: { code: 'ARG', name: 'Argentina', flag: '🇦🇷' },

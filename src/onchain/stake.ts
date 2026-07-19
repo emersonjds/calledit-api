@@ -4,8 +4,6 @@ import {
 import { getConnection } from './anchor.js';
 import { loadServiceKeypair, treasuryPubkey } from './serviceWallet.js';
 
-// Structural subset of ParsedTransactionWithMeta — only what the matcher reads.
-// Keeps the pure matcher testable with plain fixtures instead of the full RPC shape.
 interface MatchableTx {
   meta: { err: unknown } | null;
   transaction: {
@@ -40,8 +38,6 @@ export async function verifyStakeTransfer(
 ): Promise<{ ok: boolean; blockTime: number | null; reason?: string }> {
   const conn = getConnection();
   const tx = await conn.getParsedTransaction(sig, { maxSupportedTransactionVersion: 0 });
-  // RPC's parsed-instruction union isn't structurally narrower than what the matcher reads;
-  // cast to the matcher's minimal shape rather than widen it to the full RPC union.
   const res = parseTransferMatch(tx as unknown as MatchableTx | null, from, treasuryPubkey().toBase58(), lamports);
   return { ok: res.ok, blockTime: tx?.blockTime ?? null, reason: res.reason };
 }

@@ -15,10 +15,8 @@ export interface NormalizedScoreEvent {
   ts: number;
   gameState: string;
   action?: string;
-  /** Match clock, from the real feed's `Clock.Seconds`/`Clock.Running`. */
   clockSeconds?: number;
   clockRunning?: boolean;
-  /** Real feed's `StatusId`; 2 = in play. */
   statusId?: number;
   cumulative: ScoreCumulative;
 }

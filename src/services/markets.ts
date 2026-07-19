@@ -1,6 +1,5 @@
 import type { Market } from '../schemas/index.js';
 
-// ponytail: milestone-1 stub economics — real multipliers come from the live feed in milestone 2.
 const PROVABLE: Record<Market, boolean> = { goal: true, card: true, corner: true, foul: false };
 const MULTIPLIER: Record<Market, number> = { goal: 2.0, card: 1.8, corner: 1.6, foul: 1.5 };
 

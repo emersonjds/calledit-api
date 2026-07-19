@@ -10,8 +10,6 @@ export interface Predicate {
   comparison: 'GreaterThan' | 'LessThan' | 'EqualTo';
 }
 
-// TxLINE serialises 32-byte hashes as base64. If the live payload is hex,
-// switch to Buffer.from(b64, 'hex') — the de-risk script surfaces a length error first.
 export function toBytes32(b64: string): number[] {
   const buf = Buffer.from(b64, 'base64');
   if (buf.length !== 32) throw new Error(`expected 32-byte hash, got ${buf.length}`);
@@ -22,7 +20,6 @@ export function epochDayFromTs(ts: number): number {
   return Math.floor(ts / 86_400_000);
 }
 
-// Anchor camelCases IDL field names and represents enums as { variantCamel: {} }.
 const COMPARISON = {
   GreaterThan: { greaterThan: {} },
   LessThan: { lessThan: {} },
@@ -45,7 +42,6 @@ function statTerm(leaf: StatLeafJson): {
   };
 }
 
-// Positional tuple for program.methods.validateStat(...args)
 export type ValidateStatArgs = [
   BN,
   { fixtureId: BN; updateStats: { updateCount: number; minTimestamp: BN; maxTimestamp: BN }; eventsSubTreeRoot: number[] },

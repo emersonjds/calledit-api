@@ -23,10 +23,6 @@ function isAborted(signal?: AbortSignal): boolean {
   return signal?.aborted === true;
 }
 
-// Long-lived: resolves only once `signal` aborts. Reconnects forever on
-// network errors (capped backoff) and re-fetches the jwt on 401 (same capped
-// backoff, plus a hard cap on consecutive 401s so bad credentials fail loud
-// instead of hammering the guest-auth endpoint forever).
 export async function streamEvents(options: StreamEventsOptions): Promise<void> {
   const {
     origin,

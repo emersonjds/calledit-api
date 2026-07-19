@@ -25,7 +25,6 @@ app
     process.exit(1);
   });
 
-// TxLINE credentials are optional — milestone 1 must still boot without them.
 function startIngesterIfConfigured(): void {
   if (env.TXLINE_API_ORIGIN === undefined || env.TXLINE_API_TOKEN === undefined) {
     console.log('ingester disabled (no TxLINE credentials)');

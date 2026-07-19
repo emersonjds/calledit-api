@@ -3,7 +3,6 @@ import { buildApp } from '../src/app.js';
 import { commitPredictionSchema, predictionSchema } from '../src/schemas/index.js';
 import type { Db } from '../src/db/types.js';
 
-// Base58, pubkey-shaped — schema now rejects anything else (e.g. the old 'alice' fixture).
 const ALICE = '2t5SHE9udJWswb5GqKMzvRhE836uyzkdkQJGf1sHhi8p';
 
 const verifyStakeTransfer = vi.fn(async () => ({ ok: true, blockTime: 1_700_000_000 }));
@@ -24,7 +23,6 @@ function makeApp() {
     query: async (text: string, params?: unknown[]) => {
       if (text.startsWith('insert into predictions')) {
         const txHash = stringParam(params, 10);
-        // Simulates the `predictions_tx_hash_unique` index (postgres unique_violation).
         if (store.some((r) => r.tx_hash === txHash)) {
           throw Object.assign(new Error('duplicate key value violates unique constraint'), { code: '23505' });
         }

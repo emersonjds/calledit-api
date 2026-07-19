@@ -61,14 +61,11 @@ describe('getFeedSnapshot', () => {
     expect(() => matchSnapshotSchema.parse(snapshot)).not.toThrow();
     expect(snapshot.score).toEqual([1, 0]);
     expect(snapshot.events).toHaveLength(1);
-    // real odds frames carry bookmaker lines (over/under), not our goal/card/corner keys —
-    // projector falls back to the static default markets list.
     expect(snapshot.markets).toEqual([
       { market: 'goal', multiplier: 2.0 },
       { market: 'card', multiplier: 1.8 },
       { market: 'corner', multiplier: 1.6 },
     ]);
-    // live is driven by the scores stream's Clock.Running, not odds InRunning.
     expect(snapshot.live).toBe(true);
   });
 });

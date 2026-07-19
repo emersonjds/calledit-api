@@ -8,7 +8,6 @@ vi.mock('../onchain/stake.js', () => ({
   solToLamports: (sol: number) => Math.round(sol * 1_000_000_000),
 }));
 
-// >= 1e12 so normalizeScoreEvent's toMillis (seconds vs ms heuristic) passes it through untouched.
 const STAMP = 1_700_000_000_000;
 
 function scorePayload(seq: number, ts: number, goalsHome: number) {
@@ -21,8 +20,6 @@ function scorePayload(seq: number, ts: number, goalsHome: number) {
   };
 }
 
-// Minimal in-memory Db double: a single predictable prediction row + one qualifying
-// score event, enough to drive settleOne through claim -> pay -> finalize.
 function makeDb() {
   let status: 'resolving' | 'settling' | 'won' | 'lost' = 'resolving';
 
@@ -54,7 +51,7 @@ function makeDb() {
         return { rows: [] as T[], rowCount: 1 };
       }
       if (text.includes('select seq from feed_events where id')) {
-        return { rows: [] as T[] }; // skip on-chain verify (network) in this unit test
+        return { rows: [] as T[] };
       }
       if (text.includes(`status in ('resolving','settling')`)) {
         status = 'won';

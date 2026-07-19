@@ -32,8 +32,6 @@ export function buildApp(opts: AppOptions): FastifyInstance {
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
   app.decorate('db', opts.db);
-  // Allow-list the front's domains via CORS_ORIGINS; unset = open to any origin.
-  // localhost/127.0.0.1 is always allowed so local dev works even with an allow-list set.
   const allowList = opts.corsOrigins ?? [];
   const isLocalhost = (origin: string): boolean =>
     /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
@@ -72,7 +70,6 @@ export function buildApp(opts: AppOptions): FastifyInstance {
   app.register(swaggerUi, {
     routePrefix: '/swagger',
     theme: {
-      // Hide the Swagger/Fastify topbar logo — clean docs header.
       css: [{ filename: 'theme.css', content: '.swagger-ui .topbar { display: none }' }],
     },
   });

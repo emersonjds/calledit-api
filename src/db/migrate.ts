@@ -12,7 +12,6 @@ export async function runMigration(db: Db): Promise<void> {
   await db.query(sql);
 }
 
-// Run directly: `pnpm migrate`
 if (import.meta.url === `file://${process.argv[1]}`) {
   const env = loadEnv();
   const pool = new Pool({ connectionString: env.DATABASE_URL });

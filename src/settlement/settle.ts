@@ -1,7 +1,6 @@
 import type { Market, Settlement } from '../schemas/index.js';
 import type { ScoreCumulative } from '../txline/types.js';
 
-/** One score feed event, reduced to what the predicate needs. `id` doubles as the settlement proof id. */
 export interface ScoreFeedEvent {
   id: string;
   ts: number;
@@ -28,8 +27,6 @@ function isProvableMarket(market: Market): market is ProvableMarket {
   return market !== 'foul';
 }
 
-// [home, away] counts for the market's stat. `card` = yellow cards only,
-// mirroring settlement/keys.ts's base-key choice (one card market, no red).
 function sideCounts(cumulative: ScoreCumulative, market: ProvableMarket): readonly [number, number] {
   switch (market) {
     case 'goal':
@@ -52,23 +49,12 @@ const EVENT_TYPE: Record<ProvableMarket, 'goal' | 'yellow' | 'corner'> = {
   corner: 'corner',
 };
 
-/**
- * Pure settlement predicate — no I/O, no clock reads.
- *
- * WON: the market's stat total (home + away) rises anywhere in
- * `(stampedAt, stampedAt + windowMin*60000]`.
- * LOST: that window fully elapses (relative to `now`) with no rise.
- * Returns null while still waiting: window open and nothing qualifying yet.
- * `foul` (not provable) always returns null — it never settles here.
- */
 export function resolvePrediction(
   prediction: SettleablePrediction,
   events: readonly ScoreFeedEvent[],
   now: number,
 ): SettlementOutcome | null {
   if (!prediction.provable || !isProvableMarket(prediction.market)) {
-    // foul (for-fun) can't be proven on-chain — but it must still resolve so the UI never
-    // hangs on "resolving". Once its window elapses it settles as LOST.
     if (now >= prediction.stampedAt + prediction.windowMin * 60_000) {
       return {
         status: 'lost',
@@ -82,8 +68,6 @@ export function resolvePrediction(
   const windowEnd = prediction.stampedAt + prediction.windowMin * 60_000;
   const sorted = [...events].sort((a, b) => a.ts - b.ts);
 
-  // ponytail: no event at/before the stamp → assume a 0 baseline (call made
-  // before the feed carried any stat yet for this fixture).
   const baselineEvent = [...sorted].reverse().find((event) => event.ts <= prediction.stampedAt);
   const baseline = baselineEvent ? total(baselineEvent.cumulative, market) : 0;
   const baselineHome = baselineEvent ? sideCounts(baselineEvent.cumulative, market)[0] : 0;
@@ -109,8 +93,6 @@ export function resolvePrediction(
           id: qualifying.id,
           type: EVENT_TYPE[market],
           side,
-          // ponytail: raw feed carries no match-clock minute; cosmetic field only,
-          // add when a clock source (fixture kickoff + gameState) is wired in.
           clockMin: 0,
         },
       },
