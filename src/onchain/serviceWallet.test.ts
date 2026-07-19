@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { writeFileSync, rmSync } from 'node:fs';
 import { Keypair } from '@solana/web3.js';
 import { loadServiceKeypair, treasuryPubkey } from './serviceWallet.js';
@@ -18,5 +18,14 @@ describe('serviceWallet', () => {
   });
   it('treasuryPubkey matches the loaded keypair', () => {
     expect(treasuryPubkey().toBase58()).toBe(kp.publicKey.toBase58());
+  });
+
+  it('loads the keypair from an inline JSON array (Railway env form)', async () => {
+    const inlineKp = Keypair.generate();
+    vi.resetModules(); // drop the module-level cache so the inline value is read
+    process.env.SERVICE_WALLET_SECRET = JSON.stringify(Array.from(inlineKp.secretKey));
+    const fresh = await import('./serviceWallet.js');
+    expect(fresh.loadServiceKeypair().publicKey.toBase58()).toBe(inlineKp.publicKey.toBase58());
+    process.env.SERVICE_WALLET_SECRET = path; // restore for any later run
   });
 });

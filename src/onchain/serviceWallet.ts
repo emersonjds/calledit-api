@@ -9,11 +9,14 @@ function requireEnv(name: string): string {
 
 let cached: Keypair | undefined;
 
-// SERVICE_WALLET_SECRET is a path to a Solana CLI JSON keyfile ([n,n,...] of 64 bytes).
+// SERVICE_WALLET_SECRET is either a Solana CLI JSON keyfile *path*, or the JSON
+// array itself inline (starts with '['). The inline form lets hosts like Railway
+// hold the key as an env var without shipping the gitignored keyfile.
 export function loadServiceKeypair(): Keypair {
   if (cached) return cached;
-  const raw = readFileSync(requireEnv('SERVICE_WALLET_SECRET'), 'utf8').trim();
-  const bytes = Uint8Array.from(JSON.parse(raw) as number[]);
+  const value = requireEnv('SERVICE_WALLET_SECRET').trim();
+  const json = value.startsWith('[') ? value : readFileSync(value, 'utf8').trim();
+  const bytes = Uint8Array.from(JSON.parse(json) as number[]);
   cached = Keypair.fromSecretKey(bytes);
   return cached;
 }
