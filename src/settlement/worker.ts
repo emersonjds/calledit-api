@@ -3,7 +3,7 @@ import type { Market } from '../schemas/index.js';
 import { normalizeScoreEvent } from '../txline/normalize.js';
 import { fetchStatProof } from '../txline/proof.js';
 import { verifyStat } from '../onchain/verifier.js';
-import { settlementKeys } from './keys.js';
+import { baseKeysFor } from './keys.js';
 import { resolvePrediction, type ScoreFeedEvent, type SettleablePrediction } from './settle.js';
 
 interface ResolvingRow {
@@ -36,14 +36,19 @@ async function loadScoreEvents(db: Db, matchId: string): Promise<ScoreFeedEvent[
 }
 
 // The settled feed event's `seq` isn't carried by `ScoreFeedEvent` (only `id`), so it's
-// looked up from `proofId` (a feed_events.id) rather than threaded through resolvePrediction.
-// Period isn't tracked per-prediction (resolvePrediction sums cumulative totals regardless of
-// period), so 'FT' (prefix 0) is used as the closest match to that period-agnostic semantics.
+// looked up from `proofId` (a feed_events.id — NOT the `fixtureId:ts` string verifyStat
+// builds internally for its own return value) rather than threaded through resolvePrediction.
+//
+// A SINGLE stat key is requested (the side that actually changed) so the proof carries one
+// `statsToProve` leaf: `buildValidateStatArgs` then leaves `stat_b`/`op` both null, which is
+// the only combination the on-chain program accepts (IDL errors 6024-6026 revert on
+// `stat_b: Some` + `op: None`). Requesting both home+away keys reverts every call.
 async function fetchOnChainVerdict(
   db: Db,
   matchId: string,
   market: Market,
   proofId: string,
+  side: 'home' | 'away',
 ): Promise<boolean | undefined> {
   if (proofId === 'none') return undefined;
   const fixtureId = Number(matchId);
@@ -51,9 +56,10 @@ async function fetchOnChainVerdict(
   const { rows } = await db.query<{ seq: number }>(`select seq from feed_events where id = $1`, [proofId]);
   const seq = rows[0]?.seq;
   if (seq === undefined) return undefined;
-  const statKey = settlementKeys(market, 'FT').join(',');
-  if (!statKey) return undefined;
+  const statKey = String(baseKeysFor(market)[side === 'home' ? 0 : 1]);
   const proof = await fetchStatProof(fixtureId, seq, statKey);
+  // ponytail: threshold 0 is a de-risk placeholder to prove a real boolean comes back;
+  // real threshold = the baseline count once we go beyond de-risk.
   const chain = await verifyStat(proof, { threshold: 0, comparison: 'GreaterThan' });
   return chain.ok;
 }
@@ -71,11 +77,15 @@ async function settleOne(db: Db, row: ResolvingRow, events: ScoreFeedEvent[], no
 
   // Never blocks off-chain settlement: a proof/network failure just leaves
   // `verifiedOnChain` unset and the off-chain predicate stays the source of truth.
-  try {
-    const verified = await fetchOnChainVerdict(db, row.match_id, row.market, outcome.settlement.proofId);
-    if (verified !== undefined) outcome.settlement.verifiedOnChain = verified;
-  } catch (err) {
-    console.warn('on-chain verify skipped:', err instanceof Error ? err.message : err);
+  // A 'lost' outcome has no `resolvedEvent` — nothing changed, so there's nothing to prove.
+  const side = outcome.settlement.resolvedEvent?.side;
+  if (side !== undefined) {
+    try {
+      const verified = await fetchOnChainVerdict(db, row.match_id, row.market, outcome.settlement.proofId, side);
+      if (verified !== undefined) outcome.settlement.verifiedOnChain = verified;
+    } catch (err) {
+      console.warn('on-chain verify skipped:', err instanceof Error ? err.message : err);
+    }
   }
 
   // `where status = 'resolving'` is the idempotency guard: a prediction settled by
