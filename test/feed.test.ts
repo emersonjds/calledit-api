@@ -23,16 +23,13 @@ const scoreRow = (seq: number, goalsHome: number): SeedRow => ({
   kind: 'score',
   seq,
   payload: {
-    fixtureId: 'm1',
-    seq,
-    ts: 1_700_000_000_000 + seq,
-    gameState: '1H',
-    scoreSoccer: {
-      Goals: [goalsHome, 0],
-      YellowCards: [0, 0],
-      RedCards: [0, 0],
-      Corners: [0, 0],
-    },
+    FixtureId: 'm1',
+    Seq: seq,
+    Ts: 1_700_000_000_000 + seq,
+    GameState: '2H',
+    StatusId: 2,
+    Clock: { Running: true, Seconds: 1798 },
+    Stats: { '1': goalsHome, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0, '8': 0 },
   },
 });
 
@@ -40,14 +37,14 @@ const oddsRow: SeedRow = {
   kind: 'odds',
   seq: 1,
   payload: {
-    fixtureId: 'm1',
-    seq: 1,
-    ts: 1_700_000_000_001,
-    Pct: [0.5, 0.3, 0.2],
-    PriceNames: ['goal'],
-    Prices: [1.8],
+    FixtureId: 'm1',
+    Ts: 1_700_000_000_001,
+    SuperOddsType: 'OVERUNDER_PARTICIPANT_GOALS',
+    GameState: null,
     InRunning: true,
-    GameState: '1H',
+    PriceNames: ['over', 'under'],
+    Prices: [2035, 1966],
+    Pct: ['55.928', '44.092'],
   },
 };
 
@@ -64,7 +61,14 @@ describe('getFeedSnapshot', () => {
     expect(() => matchSnapshotSchema.parse(snapshot)).not.toThrow();
     expect(snapshot.score).toEqual([1, 0]);
     expect(snapshot.events).toHaveLength(1);
-    expect(snapshot.markets).toEqual([{ market: 'goal', multiplier: 1.8 }]);
+    // real odds frames carry bookmaker lines (over/under), not our goal/card/corner keys —
+    // projector falls back to the static default markets list.
+    expect(snapshot.markets).toEqual([
+      { market: 'goal', multiplier: 2.0 },
+      { market: 'card', multiplier: 1.8 },
+      { market: 'corner', multiplier: 1.6 },
+    ]);
+    // live is driven by the scores stream's Clock.Running, not odds InRunning.
     expect(snapshot.live).toBe(true);
   });
 });

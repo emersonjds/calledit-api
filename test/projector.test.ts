@@ -69,12 +69,28 @@ describe('projectSnapshot', () => {
     expect(() => matchSnapshotSchema.parse(snapshot)).not.toThrow();
   });
 
-  it('empty events produce a valid empty-ish snapshot', () => {
+  it('derives live and clockMin from the scores stream, not odds', () => {
+    const running: NormalizedScoreEvent = {
+      ...scoreEvent(1),
+      clockRunning: true,
+      clockSeconds: 1798,
+      statusId: 2,
+    };
+    const snapshot = projectSnapshot('m1', [running], [oddsEvent(1, { inRunning: false })], teams);
+    expect(snapshot.live).toBe(true);
+    expect(snapshot.clockMin).toBe(29);
+  });
+
+  it('empty events produce a valid empty-ish snapshot, with default markets so the board is bettable', () => {
     const snapshot = projectSnapshot('m1', [], [], teams);
     expect(snapshot.score).toEqual([0, 0]);
     expect(snapshot.events).toEqual([]);
     expect(snapshot.pct).toEqual({ home: 0, draw: 0, away: 0 });
-    expect(snapshot.markets).toEqual([]);
+    expect(snapshot.markets).toEqual([
+      { market: 'goal', multiplier: 2.0 },
+      { market: 'card', multiplier: 1.8 },
+      { market: 'corner', multiplier: 1.6 },
+    ]);
     expect(snapshot.live).toBe(false);
     expect(() => matchSnapshotSchema.parse(snapshot)).not.toThrow();
   });

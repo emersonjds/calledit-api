@@ -1,5 +1,15 @@
-import { matchSnapshotSchema, type MatchEvent, type MatchSnapshot, type TeamInfo } from '../schemas/index.js';
+import { matchSnapshotSchema, type Market, type MatchEvent, type MatchSnapshot, type TeamInfo } from '../schemas/index.js';
 import type { NormalizedOddsEvent, NormalizedScoreEvent, ScoreCumulative } from '../txline/types.js';
+import { multiplierFor } from './markets.js';
+
+// Provable markets, in display order — used when the odds feed has no usable market list
+// (real TxLINE odds frames carry bookmaker lines like over/under, not our goal/card/corner
+// keys) so the board still shows bettable markets.
+const DEFAULT_MARKETS: Market[] = ['goal', 'card', 'corner'];
+
+function defaultMarkets(): { market: string; multiplier: number }[] {
+  return DEFAULT_MARKETS.map((market) => ({ market, multiplier: multiplierFor(market) }));
+}
 
 // verify against live sample: mapping from TxLINE's raw `gameState` strings to our period
 // enum is a best guess until we see real values; unknown states default to '1H'.
@@ -27,13 +37,16 @@ const DIFFS: { type: MatchEvent['type']; home: keyof ScoreCumulative; away: keyo
   { type: 'corner', home: 'cornersHome', away: 'cornersAway' },
 ];
 
-function makeEvent(fixtureId: string, seq: number, type: MatchEvent['type'], side: 'home' | 'away', n: number): MatchEvent {
+function makeEvent(
+  fixtureId: string,
+  seq: number,
+  type: MatchEvent['type'],
+  side: 'home' | 'away',
+  n: number,
+  clockMin: number,
+): MatchEvent {
   const suffix = n > 0 ? `-${n}` : '';
-  // ponytail: clockMin hardcoded to 0 — RawScorePayload (txline/normalize.ts) has no
-  // minute/clock field, only `gameState`/`action`. Confirmed by live-sniffing
-  // /api/fixtures/snapshot and /api/scores/stream directly: no per-minute clock field
-  // anywhere in the raw TxLINE payloads seen. Add real clockMin if TxLINE ever adds one.
-  return { id: `${fixtureId}-${seq}-${type}-${side}${suffix}`, type, side, clockMin: 0 };
+  return { id: `${fixtureId}-${seq}-${type}-${side}${suffix}`, type, side, clockMin };
 }
 
 function diffScoreEvents(sortedScores: NormalizedScoreEvent[]): MatchEvent[] {
@@ -41,12 +54,13 @@ function diffScoreEvents(sortedScores: NormalizedScoreEvent[]): MatchEvent[] {
   for (let i = 1; i < sortedScores.length; i++) {
     const prev = sortedScores[i - 1].cumulative;
     const curr = sortedScores[i];
+    const clockMin = curr.clockSeconds !== undefined ? Math.floor(curr.clockSeconds / 60) : 0;
     for (const { type, home, away } of DIFFS) {
       for (let n = 0; n < curr.cumulative[home] - prev[home]; n++) {
-        events.push(makeEvent(curr.fixtureId, curr.seq, type, 'home', n));
+        events.push(makeEvent(curr.fixtureId, curr.seq, type, 'home', n, clockMin));
       }
       for (let n = 0; n < curr.cumulative[away] - prev[away]; n++) {
-        events.push(makeEvent(curr.fixtureId, curr.seq, type, 'away', n));
+        events.push(makeEvent(curr.fixtureId, curr.seq, type, 'away', n, clockMin));
       }
     }
   }
@@ -65,16 +79,17 @@ export function projectSnapshot(
 
   const snapshot: MatchSnapshot = {
     matchId,
-    // ponytail: same as makeEvent above — no clock field in the raw feed to surface.
-    clockMin: 0,
+    clockMin: latestScore?.clockSeconds !== undefined ? Math.floor(latestScore.clockSeconds / 60) : 0,
     period: mapPeriod(latestScore?.gameState ?? latestOdds?.gameState ?? ''),
     home: teams.home,
     away: teams.away,
     score: latestScore ? [latestScore.cumulative.goalsHome, latestScore.cumulative.goalsAway] : [0, 0],
     pct: latestOdds?.pct ?? { home: 0, draw: 0, away: 0 },
     events: diffScoreEvents(sortedScores),
-    markets: latestOdds?.markets ?? [],
-    live: latestOdds?.inRunning ?? false,
+    markets: latestOdds?.markets.length ? latestOdds.markets : defaultMarkets(),
+    // Odds ingestion is unreliable/absent-by-design (no Seq, per-market frames) — the scores
+    // stream's real match clock is the source of truth for live, not odds' `InRunning`.
+    live: latestScore?.clockRunning === true || latestScore?.statusId === 2,
   };
 
   return matchSnapshotSchema.parse(snapshot);

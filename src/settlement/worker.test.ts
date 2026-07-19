@@ -13,16 +13,11 @@ const STAMP = 1_700_000_000_000;
 
 function scorePayload(seq: number, ts: number, goalsHome: number) {
   return {
-    fixtureId: 'm1',
-    seq,
-    ts,
-    gameState: '2H',
-    scoreSoccer: {
-      Goals: [goalsHome, 0],
-      YellowCards: [0, 0],
-      RedCards: [0, 0],
-      Corners: [0, 0],
-    },
+    FixtureId: 'm1',
+    Seq: seq,
+    Ts: ts,
+    GameState: '2H',
+    Stats: { '1': goalsHome, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0, '8': 0 },
   };
 }
 
