@@ -120,7 +120,7 @@ async function settleOne(db: Db, row: ResolvingRow, events: ScoreFeedEvent[], no
 export async function runSettlementTick(db: Db, now: number = Date.now()): Promise<void> {
   const { rows } = await db.query<ResolvingRow>(
     `select id, address, match_id, market, provable, potential_sol, stamped_at, window_min
-     from predictions where status = 'resolving' and provable = true`,
+     from predictions where status = 'resolving'`,
   );
   if (rows.length === 0) return;
 

@@ -67,6 +67,15 @@ export function resolvePrediction(
   now: number,
 ): SettlementOutcome | null {
   if (!prediction.provable || !isProvableMarket(prediction.market)) {
+    // foul (for-fun) can't be proven on-chain — but it must still resolve so the UI never
+    // hangs on "resolving". Once its window elapses it settles as LOST.
+    if (now >= prediction.stampedAt + prediction.windowMin * 60_000) {
+      return {
+        status: 'lost',
+        payoutSol: 0,
+        settlement: { proofId: 'none', payoutSol: 0, calledSecondsBefore: 0, resolvedEvent: null },
+      };
+    }
     return null;
   }
   const market = prediction.market;

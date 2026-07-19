@@ -69,10 +69,16 @@ describe('resolvePrediction', () => {
     expect(outcome?.status).toBe('lost');
   });
 
-  it('never settles foul, even with a qualifying event and elapsed window', () => {
+  it('settles foul as lost once its window elapses (never provable-won, never hangs)', () => {
     const events = [event('e1', STAMP + 30_000, { goalsHome: 5 })];
     const windowEnd = STAMP + WINDOW_MIN * 60_000;
+    // window still open → waiting
+    expect(
+      resolvePrediction(prediction({ market: 'foul', provable: false }), events, STAMP + 1_000),
+    ).toBeNull();
+    // window elapsed → lost, with no on-chain resolved event
     const outcome = resolvePrediction(prediction({ market: 'foul', provable: false }), events, windowEnd);
-    expect(outcome).toBeNull();
+    expect(outcome?.status).toBe('lost');
+    expect(outcome?.settlement.resolvedEvent).toBeNull();
   });
 });
