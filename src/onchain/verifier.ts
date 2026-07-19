@@ -38,7 +38,9 @@ export async function verifyStat(
       .accounts({ dailyScoresMerkleRoots: rootsAccount })
       .view()) as boolean;
   } catch (err) {
-    if (!/does not have a return type|view/i.test(String(err))) throw err;
+    // Narrow on purpose: only the "IDL has no return type" case falls back to .simulate().
+    // A bare /view/i match would also swallow real RPC/simulation errors that merely mention "view".
+    if (!/does not have a return type/i.test(String(err))) throw err;
     const sim = await program.methods
       .validateStat(...args)
       .accounts({ dailyScoresMerkleRoots: rootsAccount })
