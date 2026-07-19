@@ -48,6 +48,7 @@ export const settlementSchema = z.object({
   calledSecondsBefore: z.number(),
   resolvedEvent: matchEventSchema.nullable(),
   verifiedOnChain: z.boolean().optional(),
+  payoutTxHash: z.string().optional(),
 });
 
 export const predictionSchema = z.object({
@@ -130,6 +131,7 @@ export const commitPredictionSchema = z.object({
   market: marketSchema,
   stakeSol: z.number().positive(),
   address: z.string(),
+  stakeTxSig: z.string().min(1),
 });
 
 export type TeamInfo = z.infer<typeof teamInfoSchema>;
