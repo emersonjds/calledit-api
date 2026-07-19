@@ -50,4 +50,24 @@ describe('buildValidateStatArgs', () => {
     expect(statB).toBeNull();
     expect(op).toBeNull();
   });
+
+  it('keeps stat_b and op null for a single statsToProve entry (the shape the worker relies on)', () => {
+    const [, , , , , , statB, op] = buildValidateStatArgs(proof, { threshold: 1, comparison: 'GreaterThan' });
+    expect(statB).toBeNull();
+    expect(op).toBeNull();
+  });
+
+  it('sets stat_b non-null when the proof carries two statsToProve entries', () => {
+    const twoStatProof: ScoresStatValidationV3 = {
+      ...proof,
+      statsToProve: [
+        ...proof.statsToProve,
+        { stat: { key: 2, value: 3, period: 0 }, statProof: [{ hash: b64(4), isRightSibling: false }], eventStatRoot: b64(5) },
+      ],
+    };
+    const [, , , , , statA, statB] = buildValidateStatArgs(twoStatProof, { threshold: 1, comparison: 'GreaterThan' });
+    expect(statA.statToProve.key).toBe(1);
+    expect(statB).not.toBeNull();
+    expect(statB?.statToProve.key).toBe(2);
+  });
 });
