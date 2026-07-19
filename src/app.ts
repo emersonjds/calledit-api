@@ -24,6 +24,7 @@ declare module 'fastify' {
 export interface AppOptions {
   db: Db;
   corsOrigins?: string[];
+  publicUrl?: string;
 }
 
 export function buildApp(opts: AppOptions): FastifyInstance {
@@ -45,7 +46,11 @@ export function buildApp(opts: AppOptions): FastifyInstance {
         description:
           'Backend for Called It — TxLINE feed ingestion, on-chain-stamped predictions, and settlement.',
       },
-      servers: [{ url: 'http://localhost:3000', description: 'local' }],
+      servers: [
+        opts.publicUrl
+          ? { url: opts.publicUrl, description: 'production' }
+          : { url: 'http://localhost:3000', description: 'local' },
+      ],
       tags: [
         { name: 'health', description: 'Service liveness.' },
         { name: 'predictions', description: 'Commit, list, and fetch calls.' },
@@ -59,7 +64,7 @@ export function buildApp(opts: AppOptions): FastifyInstance {
     transform: jsonSchemaTransform,
   });
   app.register(swaggerUi, {
-    routePrefix: '/docs',
+    routePrefix: '/swagger',
     theme: {
       // Hide the Swagger/Fastify topbar logo — clean docs header.
       css: [{ filename: 'theme.css', content: '.swagger-ui .topbar { display: none }' }],

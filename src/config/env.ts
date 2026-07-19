@@ -9,6 +9,10 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((v) => v?.split(',').map((s) => s.trim()).filter(Boolean)),
+  // Public API URL for the OpenAPI "servers" (Swagger "Try it out").
+  // PUBLIC_URL overrides; else derived from Railway's injected domain; else localhost.
+  PUBLIC_URL: z.string().optional(),
+  RAILWAY_PUBLIC_DOMAIN: z.string().optional(),
   // Optional in milestone 1 — used by the feed ingester and settlement later.
   NETWORK: z.enum(['mainnet', 'devnet']).optional(),
   SOLANA_RPC_URL: z.string().optional(),
