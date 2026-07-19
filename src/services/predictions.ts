@@ -63,7 +63,7 @@ export async function createPrediction(db: Db, input: CommitPredictionInput): Pr
   const provable = isProvable(input.market);
   const multiplier = multiplierFor(input.market);
   const potentialSol = payout(input.stakeSol, multiplier);
-  const windowMin = 5;
+  const windowMin = 3;
 
   const stakeLamports = solToLamports(input.stakeSol);
   const stake = await verifyStakeTransfer(input.stakeTxSig, input.address, stakeLamports);
