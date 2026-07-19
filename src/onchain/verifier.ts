@@ -1,25 +1,18 @@
 import { PublicKey } from '@solana/web3.js';
-import { getTxoracle, getConnection } from './anchor.js';
+import { getTxoracle } from './anchor.js';
 import { buildValidateStatArgs, epochDayFromTs, type Predicate } from './args.js';
 import type { ScoresStatValidationV3 } from '../txline/proof.js';
 
-// Set once the spike confirms it (also accepted via env TXORACLE_SCORES_ROOTS).
-const KNOWN_SCORES_ROOTS: string | undefined = undefined;
-
-export async function resolveScoresRootsAccount(): Promise<PublicKey> {
-  const fromEnv = process.env.TXORACLE_SCORES_ROOTS ?? KNOWN_SCORES_ROOTS;
+// `daily_scores_roots` is a per-day PDA, not a singleton: seeds = ["daily_scores_roots", epochDay as u16 LE].
+// Confirmed on devnet by deriving these seeds and finding real, already-rooted accounts at the
+// resulting addresses (epochDay 20648/20649/20652 all exist on-chain with this exact derivation).
+export function resolveScoresRootsAccount(epochDay: number, programId: PublicKey): PublicKey {
+  const fromEnv = process.env.TXORACLE_SCORES_ROOTS;
   if (fromEnv) return new PublicKey(fromEnv);
-  // Discovery fallback: list program accounts so the spike can identify the roots account.
-  const program = getTxoracle();
-  const accts = await getConnection().getProgramAccounts(program.programId);
-  const sorted = [...accts].sort((a, b) => b.account.data.length - a.account.data.length);
-  for (const a of sorted.slice(0, 10)) {
-    // eslint-disable-next-line no-console
-    console.log('candidate roots account', a.pubkey.toBase58(), 'bytes', a.account.data.length);
-  }
-  throw new Error(
-    'TXORACLE_SCORES_ROOTS not set — pick the roots account from the candidates above and set it in .env',
-  );
+  const dayBuf = Buffer.alloc(2);
+  dayBuf.writeUInt16LE(epochDay);
+  const [pda] = PublicKey.findProgramAddressSync([Buffer.from('daily_scores_roots'), dayBuf], programId);
+  return pda;
 }
 
 export async function verifyStat(
@@ -27,7 +20,8 @@ export async function verifyStat(
   predicate: Predicate,
 ): Promise<{ ok: boolean; proofId: string; epochDay: number }> {
   const program = getTxoracle();
-  const rootsAccount = await resolveScoresRootsAccount();
+  const epochDay = epochDayFromTs(proof.ts);
+  const rootsAccount = resolveScoresRootsAccount(epochDay, program.programId);
   const args = buildValidateStatArgs(proof, predicate);
   // validate_stat returns bool. If IDL lacks `returns`, .view() throws — fall back to .simulate()
   // and read the last "Program return:" datum (base64 → first byte === 1).
@@ -49,5 +43,5 @@ export async function verifyStat(
     ok = ret ? Buffer.from(ret.split(' ').pop() ?? '', 'base64')[0] === 1 : false;
   }
   const proofId = `${proof.summary.fixtureId}:${proof.ts}`;
-  return { ok, proofId, epochDay: epochDayFromTs(proof.ts) };
+  return { ok, proofId, epochDay };
 }
