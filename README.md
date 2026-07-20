@@ -1,143 +1,108 @@
-# Called It — World Cup 2026 Prediction Backend
+<div align="center">
 
-**Live, on-chain-verified FIFA World Cup 2026 predictions on Solana.** Users commit predictions before events, stake real devnet SOL, and settlement is determined by provable stats from the TxLINE feed.
+# CALLED ⚡T
 
-[![Solana devnet](https://img.shields.io/badge/Solana-devnet-14F195?style=flat-square&logo=solana)](https://solscan.io/?cluster=devnet)
-[![Fastify 5](https://img.shields.io/badge/Fastify-5-000000?style=flat-square&logo=fastify)](https://fastify.io)
-[![Railway](https://img.shields.io/badge/Deployed-Railway-0B0D0E?style=flat-square&logo=railway)](https://railway.app)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
+### World Cup 2026 Prediction Backend
 
-## Quick Start
+**Live, on-chain-verified predictions on Solana.**
+Call the next **goal**, **corner** or **card** in a match already in play — your call is stamped on-chain with a real stake, and settlement is provable. No house. You call it, the chain proves it.
 
-**Prerequisites:** Node 22+, Docker, `pnpm`.
+<br/>
+
+[![Solana](https://img.shields.io/badge/Solana-devnet-B6FF3C?labelColor=0B0F14)](https://explorer.solana.com/?cluster=devnet)
+[![Fastify](https://img.shields.io/badge/Fastify-5-FF7A18?labelColor=0B0F14)](https://fastify.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-B6FF3C?labelColor=0B0F14)](https://www.typescriptlang.org)
+[![Postgres](https://img.shields.io/badge/Postgres-16-FF7A18?labelColor=0B0F14)](https://www.postgresql.org)
+[![Docker](https://img.shields.io/badge/Docker-compose-B6FF3C?labelColor=0B0F14)](https://www.docker.com)
+[![Railway](https://img.shields.io/badge/Railway-deployed-FF7A18?labelColor=0B0F14)](https://calledit-api-production.up.railway.app/swagger)
+
+**[Live API](https://calledit-api-production.up.railway.app)** · **[Swagger](https://calledit-api-production.up.railway.app/swagger)** · **[Frontend](https://called-it.netlify.app)**
+
+</div>
+
+---
+
+## 🐳 Run with Docker (one command)
+
+The whole stack — API **and** Postgres — comes up together:
 
 ```bash
 git clone https://github.com/emersonjds/calledit-api.git
 cd calledit-api
-pnpm install
-
-# Start local Postgres
-docker compose up -d
-
-# Apply schema
-DATABASE_URL=postgres://calledit:calledit@localhost:5432/calledit \
-  pnpm migrate
-
-# Run the API
-pnpm dev
+docker compose up --build
 ```
 
-→ API at **http://localhost:3000** · Swagger UI at **http://localhost:3000/swagger** · Health check at `/health`.
+→ **API at http://localhost:3000** · Swagger at **/swagger** · health at **/health**.
 
-**Without TxLINE credentials**, the API still boots and predictions persist to Postgres, but `/api/fixtures/upcoming` and `/api/feed/:matchId` need the live TxLINE feed (the ingester stays disabled). The `wallet` / `me` / `leaderboard` routes always return valid-shaped stub data.
+The API boots and predictions persist right away. The **live TxLINE feed + on-chain settlement are optional** — to enable them, drop the credentials into a `.env` and uncomment the `env_file:` line in `docker-compose.yml`.
 
-Example request (the wallet must have already sent the devnet stake transfer; pass its signature as `stakeTxSig`):
+## 🧑‍💻 Run locally (without Docker)
+
+**Prerequisites:** Node 22+, `pnpm`, Docker (for Postgres).
+
 ```bash
-curl -X POST http://localhost:3000/api/predictions \
-  -H 'content-type: application/json' \
-  -d '{
-    "matchId": "18257739",
-    "market": "goal",
-    "stakeSol": 0.01,
-    "address": "<your devnet pubkey>",
-    "stakeTxSig": "<confirmed devnet transfer signature>"
-  }'
+pnpm install
+docker compose up -d postgres                 # just the database
+DATABASE_URL=postgres://calledit:calledit@localhost:5432/calledit pnpm migrate
+pnpm dev                                       # hot-reload dev server
 ```
 
-## Architecture
+## 🏗️ Architecture
 
 ```mermaid
 flowchart LR
   FE["Frontend<br/>(Phantom wallet)"]
-  API["calledit-api<br/>(Fastify)"]
-  DB["Postgres<br/>(predictions, feed_events)"]
-  FEED["TxLINE<br/>(TxODDS SSE)"]
-  SOL["Solana<br/>(txoracle, settle)"]
+  API["calledit-api<br/>(Fastify + Postgres)"]
+  FEED["TxLINE<br/>(TxODDS live SSE)"]
+  SOL["Solana<br/>(TxOracle · settle · payout)"]
 
-  FE -->|sign devnet<br/>stake tx| SOL
-  FE -->|POST /api/predictions<br/>+ stakeTxSig| API
-  API -->|verify tx<br/>stamp call| SOL
-  API -->|read/write| DB
-  FEED -->|SSE stream| API
-  API -->|CPI validate_stat<br/>+ payout| SOL
+  FE -->|1 · signs a real<br/>devnet stake| SOL
+  FE -->|2 · POST /api/predictions<br/>+ stakeTxSig| API
+  API -->|3 · verifies the tx<br/>on-chain, stamps it| SOL
+  FEED -->|4 · live feed<br/>ingested| API
+  API -->|5 · settle + pay<br/>the winner| SOL
 ```
 
-## E2E Prediction Flow
+## ⚡ Prediction flow
 
-1. **Commit**: Wallet signs a real devnet SOL transfer to the service wallet; sends `POST /api/predictions` with stake amount and `stakeTxSig`.
-2. **Stamp**: Backend verifies the on-chain transfer (`getParsedTransaction`), records prediction with `status=resolving`, returns `stamp` (txHash, blockTime, seq, epochDay).
-3. **Ingest**: Live TxLINE feed events (goals, cards, corners) stream via SSE into `feed_events` table.
-4. **Settle** (every 10s): Settlement worker reads feed events and predictions. For provable markets (goal/card/corner) it resolves off-chain — the market's stat rising inside the 5-minute window is the source of truth — and additionally validates the stat on-chain via the txoracle program's `validate_stat` (Merkle proof), stored as an advisory `verifiedOnChain` flag. `foul` never settles.
-5. **Resolve & pay**: on a win the backend pays the winner with a real service-wallet transfer (`payoutTxHash`) and flips status to `won`/`lost`; the frontend polls `GET /api/predictions/:id` until status changes.
+1. **Stake** — the wallet signs a real devnet SOL transfer to the treasury.
+2. **Commit** — `POST /api/predictions` with the `stakeTxSig`; the backend verifies the transfer on-chain and stamps the call (`status: resolving`).
+3. **Ingest** — live TxLINE events (goals, cards, corners) stream into `feed_events`.
+4. **Settle** — a worker resolves provable markets within a per-market window (**goal 2 min · corner/card 1 min**), validates the stat on-chain (`validate_stat`), and pays winners with a real transfer. `foul` is for-fun and always resolves — it never hangs.
 
-## API Endpoints
+## 🔌 API
 
-| Method | Path | Purpose | Backing |
-|--------|------|---------|---------|
-| GET | `/health` | Liveness probe | — |
-| GET | `/swagger`, `/swagger/json` | Swagger UI / OpenAPI | — |
-| POST | `/api/predictions` | Create a prediction (verifies the on-chain stake) | Postgres + Solana |
-| GET | `/api/predictions/:id` | Fetch one prediction | Postgres |
-| GET | `/api/predictions?address=` | List predictions by wallet | Postgres |
-| GET | `/api/feed/:matchId` | Live match snapshot (score, odds, markets) | Postgres (TxLINE-backed) |
-| GET | `/api/fixtures/upcoming` | Live fixtures | TxLINE |
-| POST | `/api/wallet/connect` | Connect a wallet | stub |
-| GET, POST, DELETE | `/api/wallet/*` | Wallet balance, deposits, withdrawals | stub |
-| GET | `/api/me?address=` | Caller profile (accuracy, rank) | stub |
-| GET | `/api/leaderboard` | Global leaderboard | stub |
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET` | `/health` | Liveness probe |
+| `GET` | `/swagger` | Interactive API docs (OpenAPI) |
+| `POST` | `/api/predictions` | Create a prediction (verifies the on-chain stake) |
+| `GET` | `/api/predictions/:id` | Fetch one prediction |
+| `GET` | `/api/predictions?address=` | List a wallet's predictions |
+| `GET` | `/api/feed/:matchId` | Live match snapshot (score · odds · markets) |
+| `GET` | `/api/fixtures/upcoming` | Live fixtures |
 
-**Stub routes** return valid-shaped data but are not yet backed by real services — planned for later milestones.
+> `wallet` · `me` · `leaderboard` return valid-shaped stub data (later milestones).
 
-## Environment Variables
+## ⚙️ Environment
 
 | Variable | Required | Notes |
-|----------|----------|-------|
-| `NODE_ENV` | no | `development` or `production` |
-| `PORT` | no | Default: `3000` |
-| `DATABASE_URL` | **yes** | Postgres connection string |
-| `NETWORK` | no | `devnet` or `mainnet` (dev uses devnet) |
-| `SOLANA_RPC_URL` | no | RPC endpoint for the selected network |
-| `TXORACLE_PROGRAM_ID` | no | On-chain txoracle program address |
-| `TXL_TOKEN_MINT` | no | TxL token mint for the selected network |
-| `TXLINE_API_ORIGIN` | no | TxLINE API host (e.g., `https://txline-dev.txodds.com`) |
-| `TXLINE_API_TOKEN` | no | Static API token (obtained via bootstrap flow) |
-| `TXLINE_JWT` | no | Seed JWT; auto-renewed on expiry |
-| `CORS_ORIGINS` | no | Comma-separated allow-list (no trailing slash) |
-| `SERVICE_WALLET_SECRET` | no | Path to Solana keypair JSON file, or inline JSON array — **never committed** |
+|----------|:---:|-------|
+| `DATABASE_URL` | ✅ | Postgres connection string |
+| `PORT` | | Default `3000` |
+| `CORS_ORIGINS` | | Comma-separated allow-list (localhost always allowed) |
+| `NETWORK` · `SOLANA_RPC_URL` | | Solana cluster + RPC (devnet) |
+| `TXORACLE_PROGRAM_ID` · `TXL_TOKEN_MINT` | | On-chain program + mint |
+| `TXLINE_API_ORIGIN` · `TXLINE_API_TOKEN` · `TXLINE_JWT` | | Live feed credentials (guest JWT auto-renews) |
+| `SERVICE_WALLET_SECRET` | | Solana keypair (path or inline JSON) — **never committed** |
 
-All secrets live only in `.env` (gitignored) or deployment environment — never in code or git history.
+Secrets live only in `.env` (gitignored) or the deploy environment.
 
-## Local Development
-
-```bash
-# Watch and hot-reload
-pnpm dev
-
-# Type-check
-pnpm type-check
-
-# Lint / format
-pnpm lint:fix
-pnpm format
-
-# Build for production
-pnpm build
-
-# Start compiled build
-pnpm start
-
-# Apply or reset migrations
-pnpm migrate
-```
-
-## Deploy to Railway
+## 🚀 Deploy
 
 Deployed on **Railway** — a push to `master` auto-deploys. Live API: **https://calledit-api-production.up.railway.app** (Swagger at `/swagger`).
 
-## Key Details
+## 📌 Details
 
-**Solana networks:** devnet (free test SOL, prove the on-chain path) and mainnet (real World Cup 2026 feed, live service level 12). Never mix credentials across networks — TxLINE API returns 403 otherwise.
-
-**Provable markets:** `goal`, `card`, and `corner` — each backed by TxLINE Merkle-provable stat keys. `foul` is stub-only.
-
-**Timestamps:** All times are UTC ISO 8601. Stake/payout amounts are integer base units (lamports/USDC decimals) unless explicitly noted.
+- **Provable markets:** `goal`, `card`, `corner` — backed by TxLINE Merkle-provable stat keys. `foul` is for-fun.
+- **Timestamps:** UTC ISO 8601; stake/payout amounts in integer base units (lamports).
