@@ -14,5 +14,5 @@ RUN pnpm build && cp src/db/schema.sql dist/db/schema.sql
 ENV NODE_ENV=production
 EXPOSE 3000
 
-# apply the schema, then start the API (compiled JS — no tsx/esbuild at runtime)
-CMD ["sh", "-c", "node dist/db/migrate.js && node dist/server.js"]
+# start the API (compiled JS — no tsx/esbuild at runtime); it migrates on boot after binding the port
+CMD ["node", "dist/server.js"]
